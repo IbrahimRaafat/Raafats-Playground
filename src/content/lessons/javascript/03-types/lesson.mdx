@@ -1,0 +1,57 @@
+---
+title: Types & Interfaces
+description: Define custom types and interfaces to describe the shape of your data.
+difficulty: beginner
+order: 3
+---
+
+## Types and Interfaces
+
+TypeScript lets you describe the shape of objects with `type` aliases and `interface` declarations.
+
+### `type` alias
+
+```ts
+type User = {
+  name: string;
+  age: number;
+};
+```
+
+### `interface`
+
+```ts
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+}
+```
+
+Both are nearly identical. `type` is slightly more flexible (union types, tuples), `interface` is preferred for object shapes by many teams.
+
+### Using your types
+
+```ts
+function formatUser(user: User): string {
+  return `${user.name} (${user.age})`;
+}
+```
+
+---
+
+## Your task
+
+Define and export a `type` named `Point` with:
+- `x: number`
+- `y: number`
+
+Then export a function named `distance` that takes two `Point` values and returns the Euclidean distance between them as a `number`.
+
+```ts
+export type Point = { ... };
+
+export function distance(a: Point, b: Point): number {
+  // hint: Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2)
+}
+```

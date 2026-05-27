@@ -1,0 +1,31 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - link "TS Playground" [ref=e4] [cursor=pointer]:
+      - /url: /
+    - generic [ref=e5]: /
+    - generic [ref=e6]: Learn
+  - main [ref=e7]:
+    - generic [ref=e8]:
+      - heading "Pick a track" [level=1] [ref=e9]
+      - paragraph [ref=e10]: Structured lessons with a live editor and auto-graded tests.
+    - list [ref=e11]:
+      - listitem [ref=e12]:
+        - link "JS JavaScript 3 lessons Core JS fundamentals — variables, functions, closures, async, and more." [ref=e13] [cursor=pointer]:
+          - /url: /learn/javascript
+          - generic [ref=e14]: JS
+          - generic [ref=e15]:
+            - generic [ref=e16]:
+              - generic [ref=e17]: JavaScript
+              - generic [ref=e18]: 3 lessons
+            - paragraph [ref=e19]: Core JS fundamentals — variables, functions, closures, async, and more.
+          - img [ref=e20]
+      - listitem [ref=e22]:
+        - link "Re React 2 lessons Build UIs with React — JSX, components, hooks, and state management." [ref=e23] [cursor=pointer]:
+          - /url: /learn/react
+          - generic [ref=e24]: Re
+          - generic [ref=e25]:
+            - generic [ref=e26]:
+              - generic [ref=e27]: React
+              - generic [ref=e28]: 2 lessons
+            - paragraph [ref=e29]: Build UIs with React — JSX, components, hooks, and state management.
+          - img [ref=e30]

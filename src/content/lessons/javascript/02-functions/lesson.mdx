@@ -1,0 +1,50 @@
+---
+title: Functions
+description: Write typed functions with parameters and return types.
+difficulty: beginner
+order: 2
+---
+
+## Functions in TypeScript
+
+TypeScript lets you annotate both parameter types and the return type.
+
+### Basic function
+
+```ts
+function add(a: number, b: number): number {
+  return a + b;
+}
+```
+
+### Arrow functions
+
+```ts
+const multiply = (a: number, b: number): number => a * b;
+```
+
+TypeScript will warn you if you pass the wrong types or return the wrong value.
+
+### Optional parameters
+
+Add `?` to make a parameter optional:
+
+```ts
+function greet(name?: string): string {
+  return `Hello, ${name ?? 'stranger'}!`;
+}
+```
+
+---
+
+## Your task
+
+Write and export a function named `add` that:
+- Takes two `number` parameters: `a` and `b`
+- Returns their sum as a `number`
+
+```ts
+export function add(a: number, b: number): number {
+  // your code here
+}
+```

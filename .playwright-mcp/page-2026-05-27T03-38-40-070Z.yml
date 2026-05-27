@@ -1,0 +1,102 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - link "TS Playground" [ref=e4] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e5]: /
+      - link "JavaScript" [ref=e6] [cursor=pointer]:
+        - /url: /learn/javascript
+        - img [ref=e7]
+        - text: JavaScript
+      - generic [ref=e9]: /
+      - generic [ref=e10]: Variables
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - button "Reset" [ref=e15]:
+          - img
+          - text: Reset
+        - button "Run Tests" [ref=e16]:
+          - img
+          - text: Run Tests
+      - generic [ref=e18]:
+        - generic [ref=e21]:
+          - generic:
+            - generic:
+              - generic:
+                - generic [ref=e22]: javascript
+                - generic [ref=e23]: /
+                - generic [ref=e24]: beginner
+              - heading "Variables" [level=1]
+              - paragraph: Learn the difference between var, let, and const in TypeScript.
+            - separator
+            - generic:
+              - separator
+              - 'heading "title: Variables description: Learn the difference between var, let, and const in TypeScript. difficulty: beginner order: 1" [level=2]'
+              - heading "Variables in TypeScript" [level=2]
+              - paragraph:
+                - text: TypeScript inherits JavaScript's three ways to declare variables, but
+                - code [ref=e25]: const
+                - text: and
+                - code [ref=e26]: let
+                - text: are almost always preferred over
+                - code [ref=e27]: var
+                - text: .
+              - heading "const" [level=3]:
+                - code [ref=e28]: const
+              - paragraph:
+                - text: Use
+                - code [ref=e29]: const
+                - text: when the binding won't be reassigned. It's the default choice.
+              - code [ref=e30]: const greeting = "Hello, World!";
+              - paragraph:
+                - text: TypeScript infers the type automatically —
+                - code [ref=e31]: greeting
+                - text: is
+                - code [ref=e32]: string
+                - text: .
+              - heading "let" [level=3]:
+                - code [ref=e33]: let
+              - paragraph:
+                - text: Use
+                - code [ref=e34]: let
+                - text: when you need to reassign the variable later.
+              - code [ref=e35]: let count = 0; count = count + 1; // ✓
+              - heading "var — avoid it" [level=3]:
+                - code [ref=e36]: var
+                - text: — avoid it
+              - paragraph:
+                - code [ref=e37]: var
+                - text: has function scope (not block scope) and can cause subtle bugs. Ignore it.
+              - separator
+              - heading "Your task" [level=2]
+              - paragraph:
+                - text: Declare a
+                - code [ref=e38]: const
+                - text: named
+                - code [ref=e39]: greeting
+                - text: with the value
+                - code [ref=e40]: "\"Hello, World!\""
+                - text: and
+                - code [ref=e41]: export
+                - text: it so the tests can check it.
+              - code [ref=e42]: export const greeting = "...";
+        - separator [ref=e43]
+        - generic [ref=e46]:
+          - tablist "Select active file" [ref=e48]:
+            - tab "index.ts" [selected] [ref=e49]:
+              - button "index.ts" [ref=e50] [cursor=pointer]
+          - tabpanel "index.ts" [ref=e51]:
+            - textbox "Code Editor for index.ts" [ref=e52]:
+              - generic [ref=e53]: // Declare an exported constant named 'greeting' // with the value "Hello, World!"
+        - separator [ref=e54]
+        - generic [ref=e57]:
+          - iframe [ref=e62]
+          - separator [ref=e63]
+          - button "Clean" [ref=e68] [cursor=pointer]:
+            - img "Clean" [ref=e69]
+    - link "Functions" [ref=e73] [cursor=pointer]:
+      - /url: /learn/javascript/02-functions
+      - text: Functions
+      - img [ref=e74]
+  - button "Open Next.js Dev Tools" [ref=e81] [cursor=pointer]:
+    - img [ref=e82]

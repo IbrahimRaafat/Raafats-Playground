@@ -1,0 +1,54 @@
+---
+title: JSX Basics
+description: Write your first React component with JSX syntax.
+difficulty: beginner
+order: 1
+---
+
+## What is JSX?
+
+JSX is a syntax extension that looks like HTML but is actually JavaScript. React components return JSX that describes what should appear on screen.
+
+```tsx
+function Greeting() {
+  return <h1>Hello, world!</h1>;
+}
+```
+
+### Expressions in JSX
+
+Use `{}` to embed any JavaScript expression:
+
+```tsx
+const name = "Alice";
+return <p>Hello, {name}!</p>;
+// renders: Hello, Alice!
+```
+
+### className, not class
+
+JSX uses `className` instead of `class` (since `class` is a reserved word in JS):
+
+```tsx
+return <div className="container">...</div>;
+```
+
+### Self-closing tags
+
+Elements without children must be self-closed:
+
+```tsx
+return <img src="photo.jpg" alt="A photo" />;
+```
+
+---
+
+## Your task
+
+The `App` component currently renders nothing useful. Update it to return an `<h1>` that says **"Hello, React!"**.
+
+```tsx
+export default function App() {
+  return <h1>Hello, React!</h1>;
+}
+```

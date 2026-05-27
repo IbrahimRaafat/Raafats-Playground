@@ -1,0 +1,55 @@
+---
+title: Props & Components
+description: Build reusable components by passing data through props.
+difficulty: beginner
+order: 2
+---
+
+## Props
+
+Props (short for properties) let you pass data into a component, making it reusable.
+
+```tsx
+type CardProps = {
+  title: string;
+  body: string;
+};
+
+function Card({ title, body }: CardProps) {
+  return (
+    <div className="card">
+      <h2>{title}</h2>
+      <p>{body}</p>
+    </div>
+  );
+}
+```
+
+### Using the component
+
+```tsx
+<Card title="Hello" body="This is a card." />
+<Card title="Another" body="Reusable!" />
+```
+
+### Default props
+
+You can set defaults with destructuring:
+
+```tsx
+function Greeting({ name = "stranger" }: { name?: string }) {
+  return <p>Hello, {name}!</p>;
+}
+```
+
+---
+
+## Your task
+
+Create a `Greeting` component that:
+- Accepts a `name` prop of type `string`
+- Returns a `<p>` tag with the text `Hello, {name}!`
+
+Then use it in `App` to render `<Greeting name="React" />`.
+
+The expected output is a `<p>` containing `Hello, React!`.

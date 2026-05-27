@@ -1,0 +1,43 @@
+---
+title: Variables
+description: Learn the difference between var, let, and const in TypeScript.
+difficulty: beginner
+order: 1
+---
+
+## Variables in TypeScript
+
+TypeScript inherits JavaScript's three ways to declare variables, but `const` and `let` are almost always preferred over `var`.
+
+### `const`
+
+Use `const` when the binding won't be reassigned. It's the default choice.
+
+```ts
+const greeting = "Hello, World!";
+```
+
+TypeScript infers the type automatically — `greeting` is `string`.
+
+### `let`
+
+Use `let` when you need to reassign the variable later.
+
+```ts
+let count = 0;
+count = count + 1; // ✓
+```
+
+### `var` — avoid it
+
+`var` has function scope (not block scope) and can cause subtle bugs. Ignore it.
+
+---
+
+## Your task
+
+Declare a `const` named `greeting` with the value `"Hello, World!"` and `export` it so the tests can check it.
+
+```ts
+export const greeting = "...";
+```
