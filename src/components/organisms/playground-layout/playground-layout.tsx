@@ -8,16 +8,17 @@ import { Toolbar } from '@/components/molecules/toolbar/toolbar'
 
 type Props = {
   instructions?: React.ReactNode
-  testFile?: string
+  hasTestFile?: boolean
+  isReact?: boolean
   template?: string
   showRunButton?: boolean
   onTestResult?: (passed: boolean) => void
 }
 
-function PlaygroundLayout({ instructions, testFile, template, showRunButton, onTestResult }: Props) {
+function PlaygroundLayout({ instructions, hasTestFile, isReact, template, showRunButton, onTestResult }: Props) {
   return (
     <div className="flex flex-col h-full">
-      <Toolbar testFile={testFile} template={template} showRunButton={showRunButton} onTestResult={onTestResult} />
+      <Toolbar hasTestFile={hasTestFile} isReact={isReact} template={template} showRunButton={showRunButton} onTestResult={onTestResult} />
       <div className="flex-1 min-h-0">
         <Group orientation="horizontal" className="h-full">
           {instructions && (

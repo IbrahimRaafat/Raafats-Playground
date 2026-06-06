@@ -2,12 +2,19 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { SandpackProvider } from '@codesandbox/sandpack-react'
 import { Toolbar } from './toolbar'
 
-// Toolbar must live inside SandpackProvider (it calls useSandpack / useSandpackConsole)
+const TEST_CODE = `import { result } from './index'
+if (result === 2) { console.log('✅ All tests passed!'); } else { console.log('❌ Expected 2'); }`
+
 function ToolbarInProvider(props: React.ComponentProps<typeof Toolbar>) {
   return (
     <SandpackProvider
       template="vanilla-ts"
-      files={{ '/index.ts': 'console.log("hello")' }}
+      files={{
+        '/index.ts': 'export const result = 1 + 1',
+        '/__tests__.ts': TEST_CODE,
+        '/__test_runner__.ts': `import './index'\n`,
+      }}
+      customSetup={{ entry: '/__test_runner__.ts' }}
       options={{ autorun: false }}
     >
       <div className="border border-border rounded-lg overflow-hidden w-full max-w-xl">
@@ -33,7 +40,7 @@ export const FreeSandbox: Story = {
 
 export const LessonWithTests: Story = {
   args: {
-    testFile: `const result = 1 + 1;\nif (result === 2) { console.log('✅ All tests passed!'); } else { console.log('❌ Expected 2'); }`,
+    hasTestFile: true,
     template: 'vanilla-ts',
   },
 }
