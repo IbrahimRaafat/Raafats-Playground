@@ -19,9 +19,10 @@ type Props = {
   template?: string
   showRunButton?: boolean
   onTestResult?: (passed: boolean) => void
+  onTestStart?: () => void
 }
 
-function Toolbar({ hasTestFile, isReact, template, showRunButton, onTestResult }: Props) {
+function Toolbar({ hasTestFile, isReact, template, showRunButton, onTestResult, onTestStart }: Props) {
   const { sandpack } = useSandpack()
   const { logs, reset: resetConsole } = useSandpackConsole({ resetOnPreviewRestart: true })
   const [testStatus, setTestStatus] = useState<'idle' | 'running' | 'pass' | 'fail'>('idle')
@@ -57,6 +58,7 @@ function Toolbar({ hasTestFile, isReact, template, showRunButton, onTestResult }
     }
 
     setTestStatus('running')
+    onTestStart?.()
     resetConsole()
     sandpack.updateFile(runnerFile, runnerCode)
   }
@@ -87,18 +89,19 @@ function Toolbar({ hasTestFile, isReact, template, showRunButton, onTestResult }
 
   useEffect(() => {
     if (logs.length === 0) return
-    for (const log of logs) {
-      const text = log.data?.map((d) => (typeof d === 'string' ? d : JSON.stringify(d))).join(' ') ?? ''
-      if (text.includes('✅')) {
-        setTestStatus('pass')
-        onTestResult?.(true)
-        return
-      }
-      if (text.includes('❌') || text.toLowerCase().includes('error')) {
-        setTestStatus('fail')
-        onTestResult?.(false)
-        return
-      }
+    // Collect all log texts
+    const texts = logs.map((log) =>
+      log.data?.map((d) => (typeof d === 'string' ? d : JSON.stringify(d))).join(' ').trim() ?? ''
+    )
+    // Look for a summary line first (named test format)
+    const summaryPass = texts.find((t) => t.includes('All tests passed'))
+    const summaryFail = texts.find((t) => t.includes('test(s) failed') || t.includes('tests failed'))
+    if (summaryPass) { setTestStatus('pass'); onTestResult?.(true); return }
+    if (summaryFail) { setTestStatus('fail'); onTestResult?.(false); return }
+    // Fallback: first ✅ / ❌ wins (old single-result format)
+    for (const text of texts) {
+      if (text.startsWith('✅')) { setTestStatus('pass'); onTestResult?.(true); return }
+      if (text.startsWith('❌') || text.toLowerCase().includes('error')) { setTestStatus('fail'); onTestResult?.(false); return }
     }
   }, [logs, onTestResult])
 

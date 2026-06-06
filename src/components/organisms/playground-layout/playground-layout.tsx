@@ -4,7 +4,9 @@ import { Group, Panel, Separator } from 'react-resizable-panels'
 import { EditorPanel } from '@/components/atoms/editor-panel/editor-panel'
 import { PreviewPanel } from '@/components/atoms/preview-panel/preview-panel'
 import { ConsolePanel } from '@/components/atoms/console-panel/console-panel'
+import { TestResultsPanel } from '@/components/organisms/test-results-panel/test-results-panel'
 import { Toolbar } from '@/components/molecules/toolbar/toolbar'
+import { useState } from 'react'
 
 type Props = {
   instructions?: React.ReactNode
@@ -16,9 +18,27 @@ type Props = {
 }
 
 function PlaygroundLayout({ instructions, hasTestFile, isReact, template, showRunButton, onTestResult }: Props) {
+  const [testRunning, setTestRunning] = useState(false)
+
+  function handleTestResult(passed: boolean) {
+    setTestRunning(false)
+    onTestResult?.(passed)
+  }
+
+  function handleTestStart() {
+    setTestRunning(true)
+  }
+
   return (
     <div className="flex flex-col h-full">
-      <Toolbar hasTestFile={hasTestFile} isReact={isReact} template={template} showRunButton={showRunButton} onTestResult={onTestResult} />
+      <Toolbar
+        hasTestFile={hasTestFile}
+        isReact={isReact}
+        template={template}
+        showRunButton={showRunButton}
+        onTestResult={handleTestResult}
+        onTestStart={handleTestStart}
+      />
       <div className="flex-1 min-h-0">
         <Group orientation="horizontal" className="h-full">
           {instructions && (
@@ -40,13 +60,33 @@ function PlaygroundLayout({ instructions, hasTestFile, isReact, template, showRu
 
           <Panel defaultSize={35} minSize={20}>
             <Group orientation="vertical" className="h-full">
-              <Panel defaultSize={60} minSize={20}>
-                <PreviewPanel />
+              {/* Preview only shown for React lessons */}
+              {isReact && (
+                <>
+                  <Panel defaultSize={55} minSize={20}>
+                    <PreviewPanel />
+                  </Panel>
+                  <Separator className="h-1 bg-border hover:bg-primary/40 transition-colors cursor-row-resize" />
+                </>
+              )}
+
+              <Panel defaultSize={isReact ? 45 : 100} minSize={20}>
+                {hasTestFile ? (
+                  <TestResultsPanel isRunning={testRunning} />
+                ) : (
+                  <ConsolePanel />
+                )}
               </Panel>
-              <Separator className="h-1 bg-border hover:bg-primary/40 transition-colors cursor-row-resize" />
-              <Panel defaultSize={40} minSize={15}>
-                <ConsolePanel />
-              </Panel>
+
+              {/* Console below test results for vanilla-ts */}
+              {!isReact && hasTestFile && (
+                <>
+                  <Separator className="h-1 bg-border hover:bg-primary/40 transition-colors cursor-row-resize" />
+                  <Panel defaultSize={35} minSize={15}>
+                    <ConsolePanel />
+                  </Panel>
+                </>
+              )}
             </Group>
           </Panel>
         </Group>
