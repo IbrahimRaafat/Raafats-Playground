@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import {
   ArrowRight, ChevronDown, X, BookOpen, Zap,
-  CheckCircle2, BarChart2, Star, MessageSquare, Clock,
+  CheckCircle2, BarChart2, Star, MessageSquare, Clock, Code2,
 } from 'lucide-react'
 import { useTranslation } from '@/components/providers/locale-provider/locale-provider'
 import { ThemeToggle } from '@/components/atoms/theme-toggle/theme-toggle'
@@ -225,6 +225,9 @@ export function HomeContent({ tracks }: { tracks: Track[] }) {
           </button>
           <Link href="/learn" className="text-sm px-3 py-1.5 rounded-md font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
             Learn
+          </Link>
+          <Link href="/questions" className="text-sm px-3 py-1.5 rounded-md font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+            Questions
           </Link>
           <button className="inline-flex items-center gap-1 text-sm px-3 py-1.5 rounded-md font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
             Playground <ChevronDown className="h-3.5 w-3.5" />
@@ -454,6 +457,88 @@ export function HomeContent({ tracks }: { tracks: Track[] }) {
           <Link href="/learn" className="inline-flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100 hover:underline underline-offset-4">
             View all tracks and lessons <ArrowRight className="h-4 w-4" />
           </Link>
+        </div>
+      </section>
+
+      {/* ── Company Questions ── */}
+      <section className="border-t border-neutral-100 dark:border-neutral-800 px-6 md:px-12 lg:px-20 py-20 max-w-7xl mx-auto w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          {/* Left copy */}
+          <div>
+            <span className="inline-block text-xs font-bold uppercase tracking-widest text-neutral-400 mb-4">
+              Interview prep
+            </span>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-neutral-900 dark:text-white mb-5">
+              Nail your{' '}
+              <span className="text-neutral-400 dark:text-neutral-500">technical interview</span>
+            </h2>
+            <p className="text-lg text-neutral-500 dark:text-neutral-400 mb-8 leading-relaxed max-w-md">
+              Practice coding challenges and theoretical questions asked at{' '}
+              <strong className="text-neutral-900 dark:text-neutral-100">Google</strong>,{' '}
+              <strong className="text-neutral-900 dark:text-neutral-100">Meta</strong>,{' '}
+              <strong className="text-neutral-900 dark:text-neutral-100">Amazon</strong> and more —
+              with hints, full answers, and a live playground.
+            </p>
+
+            {/* Company badge grid */}
+            <div className="flex flex-wrap gap-2 mb-8">
+              {['Google', 'Meta', 'Amazon', 'Microsoft', 'Netflix', 'Apple', 'Airbnb', 'Uber'].map((co) => (
+                <span
+                  key={co}
+                  className="px-3 py-1.5 rounded-full text-xs font-bold border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:border-neutral-400 transition-colors"
+                >
+                  {co}
+                </span>
+              ))}
+            </div>
+
+            <Link
+              href="/questions"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-neutral-900 hover:opacity-90 transition-opacity"
+              style={{ background: LIME }}
+            >
+              Browse all questions <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          {/* Right — featured question preview cards */}
+          <div className="flex flex-col gap-3">
+            {[
+              { title: 'Implement debounce()', type: 'coding', companies: ['Google', 'Meta'], diff: 'medium' },
+              { title: 'Explain the JavaScript event loop', type: 'theory', companies: ['Google', 'Amazon'], diff: 'medium' },
+              { title: 'Implement Promise.all()', type: 'coding', companies: ['Meta', 'Netflix'], diff: 'medium' },
+              { title: 'Explain closures in JavaScript', type: 'theory', companies: ['Meta', 'Amazon'], diff: 'easy' },
+            ].map((q, i) => (
+              <Link
+                key={i}
+                href="/questions"
+                className="flex items-center gap-4 px-4 py-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:border-neutral-400 dark:hover:border-neutral-500 hover:shadow-sm transition-all group"
+              >
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-neutral-100 dark:bg-neutral-800">
+                  {q.type === 'coding'
+                    ? <Code2 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                    : <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  }
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-sm text-neutral-900 dark:text-neutral-100 mb-1">{q.title}</div>
+                  <div className="flex items-center gap-1.5">
+                    {q.companies.map((c) => (
+                      <span key={c} className="text-[10px] font-bold text-neutral-500 dark:text-neutral-400">{c}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                    q.diff === 'easy' ? 'text-green-700 bg-green-100 dark:text-green-400 dark:bg-green-950' :
+                    q.diff === 'medium' ? 'text-yellow-700 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-950' :
+                    'text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-950'
+                  }`}>{q.diff}</span>
+                  <ArrowRight className="h-3.5 w-3.5 text-neutral-300 dark:text-neutral-600 group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors" />
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 

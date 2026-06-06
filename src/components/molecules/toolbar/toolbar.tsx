@@ -27,6 +27,7 @@ function Toolbar({ hasTestFile, isReact, template, showRunButton, onTestResult, 
   const { logs, reset: resetConsole } = useSandpackConsole({ resetOnPreviewRestart: true })
   const [testStatus, setTestStatus] = useState<'idle' | 'running' | 'pass' | 'fail'>('idle')
   const prevLogsLengthRef = useRef(0)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { t } = useTranslation()
 
   function handleReset() {
@@ -61,7 +62,16 @@ function Toolbar({ hasTestFile, isReact, template, showRunButton, onTestResult, 
     onTestStart?.()
     resetConsole()
     sandpack.updateFile(runnerFile, runnerCode)
+
+    // Auto-fail if no result arrives within 30 seconds
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    timeoutRef.current = setTimeout(() => {
+      setTestStatus((prev) => (prev === 'running' ? 'fail' : prev))
+    }, 30000)
   }
+
+  // Clear timeout on unmount
+  useEffect(() => () => { if (timeoutRef.current) clearTimeout(timeoutRef.current) }, [])
 
   const runActionRef = useRef<() => void>(() => {})
   useEffect(() => {
@@ -96,12 +106,12 @@ function Toolbar({ hasTestFile, isReact, template, showRunButton, onTestResult, 
     // Look for a summary line first (named test format)
     const summaryPass = texts.find((t) => t.includes('All tests passed'))
     const summaryFail = texts.find((t) => t.includes('test(s) failed') || t.includes('tests failed'))
-    if (summaryPass) { setTestStatus('pass'); onTestResult?.(true); return }
-    if (summaryFail) { setTestStatus('fail'); onTestResult?.(false); return }
+    if (summaryPass) { if (timeoutRef.current) clearTimeout(timeoutRef.current); setTestStatus('pass'); onTestResult?.(true); return }
+    if (summaryFail) { if (timeoutRef.current) clearTimeout(timeoutRef.current); setTestStatus('fail'); onTestResult?.(false); return }
     // Fallback: first ✅ / ❌ wins (old single-result format)
     for (const text of texts) {
-      if (text.startsWith('✅')) { setTestStatus('pass'); onTestResult?.(true); return }
-      if (text.startsWith('❌') || text.toLowerCase().includes('error')) { setTestStatus('fail'); onTestResult?.(false); return }
+      if (text.startsWith('✅')) { if (timeoutRef.current) clearTimeout(timeoutRef.current); setTestStatus('pass'); onTestResult?.(true); return }
+      if (text.startsWith('❌')) { if (timeoutRef.current) clearTimeout(timeoutRef.current); setTestStatus('fail'); onTestResult?.(false); return }
     }
   }, [logs, onTestResult])
 
