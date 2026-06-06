@@ -1,0 +1,81 @@
+---
+title: Props & Component Composition
+description: Pass data into components with props and compose UIs from smaller pieces.
+difficulty: beginner
+order: 5
+---
+
+## What are props?
+
+**Props** (short for properties) are how you pass data from a parent component to a child. They make components reusable.
+
+```tsx
+function Greeting({ name }: { name: string }) {
+  return <h1>Hello, {name}!</h1>;
+}
+
+// Using it:
+<Greeting name="Alice" />
+<Greeting name="Bob" />
+```
+
+## Typing props with an interface
+
+For larger components, define a props interface:
+
+```tsx
+interface CardProps {
+  title: string;
+  body: string;
+  highlighted?: boolean;
+}
+
+function Card({ title, body, highlighted = false }: CardProps) {
+  return (
+    <div style={{ fontWeight: highlighted ? "bold" : "normal" }}>
+      <h2>{title}</h2>
+      <p>{body}</p>
+    </div>
+  );
+}
+```
+
+## `children` prop
+
+Any JSX nested inside a component tag is available as `children`:
+
+```tsx
+function Box({ children }: { children: React.ReactNode }) {
+  return <div style={{ border: "1px solid #ccc", padding: "1rem" }}>{children}</div>;
+}
+
+<Box>
+  <p>I'm inside the box!</p>
+</Box>
+```
+
+## Composition
+
+Build complex UIs from small, single-purpose components:
+
+```tsx
+function App() {
+  return (
+    <Box>
+      <Card title="TypeScript" body="A typed superset of JavaScript" highlighted />
+      <Card title="React" body="A library for building UIs" />
+    </Box>
+  );
+}
+```
+
+---
+
+## Your task
+
+Create a `UserCard` component that accepts:
+- `name: string`
+- `role: string`
+- `avatar?: string` (optional — show initials if missing)
+
+And render it **twice** in `App` with different props. Each card should display the name and role in the DOM.

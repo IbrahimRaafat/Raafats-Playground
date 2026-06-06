@@ -1,0 +1,74 @@
+---
+title: Lists & Conditional Rendering
+description: Render dynamic lists with .map() and show content conditionally.
+difficulty: beginner
+order: 7
+---
+
+## Rendering lists
+
+Use JavaScript's `.map()` to turn an array into JSX elements:
+
+```tsx
+const fruits = ["Apple", "Banana", "Cherry"];
+
+function FruitList() {
+  return (
+    <ul>
+      {fruits.map(fruit => (
+        <li key={fruit}>{fruit}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### The `key` prop
+
+Every item in a list needs a `key` prop that is **unique and stable**. React uses it to track which items changed, were added, or removed.
+
+- ✅ Use IDs: `key={item.id}`
+- ✅ Use unique strings: `key={item.name}` (if guaranteed unique)
+- ❌ Avoid array indexes for dynamic lists: `key={i}` causes bugs when items reorder
+
+## Conditional rendering
+
+Use `&&` for "show if true", and the ternary `? :` for "show one or the other":
+
+```tsx
+function Status({ isLoading, data }: { isLoading: boolean; data: string | null }) {
+  return (
+    <div>
+      {isLoading && <p>Loading...</p>}
+      {!isLoading && data && <p>{data}</p>}
+      {!isLoading && !data && <p>No data found.</p>}
+    </div>
+  );
+}
+```
+
+## Typed data structures
+
+```tsx
+interface Todo {
+  id: number;
+  text: string;
+  done: boolean;
+}
+
+const todos: Todo[] = [
+  { id: 1, text: "Learn React", done: true },
+  { id: 2, text: "Build something", done: false },
+];
+```
+
+---
+
+## Your task
+
+Build a filterable todo list:
+
+1. Define a `Todo` interface with `id: number`, `text: string`, `done: boolean`
+2. Start with at least **3 todos** in state (a mix of done/not done)
+3. Render them in a `<ul>` — each `<li>` should show the text, and if done, apply a strikethrough style
+4. Add a "Show completed only" checkbox — when checked, only show todos where `done === true`

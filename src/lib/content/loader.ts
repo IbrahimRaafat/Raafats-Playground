@@ -67,7 +67,8 @@ function getLessonsForTrack(trackSlug: string): LessonMeta[] {
 export function getLessonMdx(trackSlug: string, lessonSlug: string): string | null {
   const mdxPath = path.join(CONTENT_DIR, trackSlug, lessonSlug, 'lesson.mdx')
   if (!fs.existsSync(mdxPath)) return null
-  return fs.readFileSync(mdxPath, 'utf8')
+  const raw = fs.readFileSync(mdxPath, 'utf8')
+  return matter(raw).content
 }
 
 export async function getLessonConfig(

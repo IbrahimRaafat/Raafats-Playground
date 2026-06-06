@@ -1,0 +1,67 @@
+---
+title: Generics
+description: Write reusable, type-safe functions and data structures with generics.
+difficulty: intermediate
+order: 7
+---
+
+## The problem generics solve
+
+Without generics, to write a function that works with any type you'd use `any` — which throws away type safety:
+
+```ts
+function first(arr: any[]): any {
+  return arr[0];
+}
+```
+
+TypeScript can't tell you what type `first([1, 2, 3])` returns. It's `any`.
+
+## Introducing generics
+
+A **type parameter** (written `<T>`) acts as a placeholder that gets filled in at call time:
+
+```ts
+function first<T>(arr: T[]): T {
+  return arr[0];
+}
+
+const n = first([1, 2, 3]);   // n is number ✓
+const s = first(["a", "b"]);  // s is string ✓
+```
+
+TypeScript infers `T` automatically — you rarely need to write it explicitly.
+
+## Generic functions
+
+```ts
+function identity<T>(value: T): T {
+  return value;
+}
+
+function pair<A, B>(a: A, b: B): [A, B] {
+  return [a, b];
+}
+```
+
+## Generic constraints
+
+Use `extends` to restrict what `T` can be:
+
+```ts
+function getLength<T extends { length: number }>(item: T): number {
+  return item.length;
+}
+
+getLength("hello");  // 5
+getLength([1, 2, 3]); // 3
+getLength(42);        // ❌ Error: number has no .length
+```
+
+---
+
+## Your task
+
+1. Export a generic function `identity<T>` that takes a value and returns it unchanged.
+2. Export a generic function `last<T>` that takes a `T[]` array and returns the last element (or `undefined` if empty).
+3. Export a generic function `filterTruthy<T>` that takes a `T[]` and returns a new array with all falsy values removed.

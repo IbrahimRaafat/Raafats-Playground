@@ -1,0 +1,90 @@
+---
+title: Type Utilities
+description: Use TypeScript's built-in utility types to transform existing types.
+difficulty: advanced
+order: 8
+---
+
+## Built-in utility types
+
+TypeScript ships with utility types that let you create new types by transforming existing ones. You never need to re-write common patterns.
+
+### `Partial<T>`
+
+Makes every property of `T` optional — great for update payloads:
+
+```ts
+interface User {
+  name: string;
+  age: number;
+  email: string;
+}
+
+type UserUpdate = Partial<User>;
+// { name?: string; age?: number; email?: string }
+```
+
+### `Required<T>`
+
+The opposite — makes every property required:
+
+```ts
+type RequiredUser = Required<UserUpdate>;
+// { name: string; age: number; email: string }
+```
+
+### `Pick<T, Keys>`
+
+Select a subset of properties:
+
+```ts
+type UserPreview = Pick<User, "name" | "email">;
+// { name: string; email: string }
+```
+
+### `Omit<T, Keys>`
+
+Drop specific properties:
+
+```ts
+type PublicUser = Omit<User, "email">;
+// { name: string; age: number }
+```
+
+### `Readonly<T>`
+
+Prevents any property from being reassigned:
+
+```ts
+const config: Readonly<User> = { name: "Alice", age: 30, email: "a@b.com" };
+config.name = "Bob"; // ❌ Error
+```
+
+### `Record<Keys, Value>`
+
+Create an object type with specific keys and a uniform value type:
+
+```ts
+type ScoreMap = Record<string, number>;
+const scores: ScoreMap = { alice: 95, bob: 87 };
+```
+
+---
+
+## Your task
+
+Given this interface:
+
+```ts
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  description: string;
+}
+```
+
+1. Export `ProductPreview` — a `Pick` of `id` and `name` only
+2. Export `ProductUpdate` — a `Partial` of `Product`
+3. Export `ProductWithoutDesc` — an `Omit` of `description`
+4. Export a function `createPreview(p: Product): ProductPreview` that returns just the `id` and `name`

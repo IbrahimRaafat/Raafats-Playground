@@ -1,0 +1,70 @@
+---
+title: Event Handling
+description: Handle user interactions with typed event handlers in React.
+difficulty: beginner
+order: 6
+---
+
+## Handling events in React
+
+React uses camelCase event props like `onClick`, `onChange`, `onSubmit` instead of HTML's lowercase attributes.
+
+```tsx
+function Button() {
+  function handleClick() {
+    console.log("clicked!");
+  }
+
+  return <button onClick={handleClick}>Click me</button>;
+}
+```
+
+## Typing event objects
+
+Every handler receives a typed event object. TypeScript knows the exact type based on the element:
+
+```tsx
+// Input change
+function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  console.log(e.target.value);
+}
+
+// Form submit
+function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+  // process form
+}
+
+// Button click
+function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
+  console.log("x:", e.clientX, "y:", e.clientY);
+}
+```
+
+## Controlled inputs
+
+A **controlled input** stores its value in state and updates state on every change. React is the single source of truth:
+
+```tsx
+function SearchBox() {
+  const [query, setQuery] = useState("");
+
+  return (
+    <input
+      value={query}
+      onChange={e => setQuery(e.target.value)}
+      placeholder="Search..."
+    />
+  );
+}
+```
+
+---
+
+## Your task
+
+Build a controlled form with:
+1. A text `<input>` that tracks its value in state
+2. A `<button type="submit">` or form `onSubmit` handler that prevents the default reload
+3. A `<p>` that shows `You typed: {value}` reflecting the current input in real time
+4. A `<ul>` that shows submitted values as `<li>` items — each submit appends the current value to a list (and clears the input)

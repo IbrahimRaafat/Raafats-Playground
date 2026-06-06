@@ -1,23 +1,22 @@
-import Link from 'next/link'
-import { PlaygroundRoot } from '@/components/playground/playground-root'
-import { PlaygroundLayout } from '@/components/playground/playground-layout'
+import { PlaygroundRoot } from '@/components/providers/playground-root/playground-root'
+import { PlaygroundLayout } from '@/components/organisms/playground-layout/playground-layout'
+import { BreadcrumbNav } from '@/components/molecules/breadcrumb-nav/breadcrumb-nav'
+import { ThemeToggle } from '@/components/atoms/theme-toggle/theme-toggle'
+import { LanguageToggle } from '@/components/atoms/language-toggle/language-toggle'
 
 export const metadata = { title: 'Playground — TS Playground' }
 
 export default function PlaygroundPage() {
   return (
     <div className="h-screen flex flex-col">
-      <header className="flex items-center gap-3 px-4 py-2 border-b border-border bg-background shrink-0">
-        <Link href="/" className="text-sm font-semibold text-primary hover:underline">
-          TS Playground
-        </Link>
-        <span className="text-muted-foreground">/</span>
-        <span className="text-sm text-muted-foreground">Free Playground</span>
-      </header>
+      <BreadcrumbNav
+        items={[{ labelKey: 'breadcrumb.freePlyd' }]}
+        actions={<><ThemeToggle /><LanguageToggle /></>}
+      />
 
       <div className="flex-1 min-h-0">
-        <PlaygroundRoot template="react-ts">
-          <PlaygroundLayout />
+        <PlaygroundRoot template="vanilla-ts" autorun={false}>
+          <PlaygroundLayout showRunButton />
         </PlaygroundRoot>
       </div>
     </div>

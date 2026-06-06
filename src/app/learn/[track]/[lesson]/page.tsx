@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { getTrack, getLessonMdx, getLessonConfig } from '@/lib/content/loader'
-import { PlaygroundRoot } from '@/components/playground/playground-root'
-import { PlaygroundLayout } from '@/components/playground/playground-layout'
-import { LessonInstructions } from '@/components/lessons/lesson-instructions'
-import { LessonNav } from '@/components/lessons/lesson-nav'
-import { ChevronLeft } from 'lucide-react'
+import { LessonPlayground } from '@/components/organisms/lesson-playground/lesson-playground'
+import { LessonInstructions } from '@/components/organisms/lesson-instructions/lesson-instructions'
+import { LessonNav } from '@/components/molecules/lesson-nav/lesson-nav'
+import { BreadcrumbNav } from '@/components/molecules/breadcrumb-nav/breadcrumb-nav'
+import { ThemeToggle } from '@/components/atoms/theme-toggle/theme-toggle'
+import { LanguageToggle } from '@/components/atoms/language-toggle/language-toggle'
+import { LessonCompletedBadge } from '@/components/atoms/lesson-completed-badge/lesson-completed-badge'
 
 type Props = { params: Promise<{ track: string; lesson: string }> }
 
@@ -36,39 +37,27 @@ export default async function LessonPage({ params }: Props) {
 
   if (!mdxSource || !config) notFound()
 
-  const allFiles: Record<string, string> = {
-    ...config.starterFiles,
-    ...(config.testFile ? { '/__tests__.ts': config.testFile } : {}),
-  }
-
   const instructions = <LessonInstructions meta={meta} mdxSource={mdxSource} />
 
   return (
     <div className="h-screen flex flex-col">
-      <header className="flex items-center gap-3 px-4 py-2 border-b border-border bg-background shrink-0">
-        <Link href="/" className="text-sm font-semibold text-primary hover:underline">
-          TS Playground
-        </Link>
-        <span className="text-muted-foreground">/</span>
-        <Link href={`/learn/${trackSlug}`} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
-          <ChevronLeft className="h-3 w-3" />
-          {track.title}
-        </Link>
-        <span className="text-muted-foreground">/</span>
-        <span className="text-sm truncate max-w-[200px]">{meta.title}</span>
-      </header>
+      <BreadcrumbNav
+        items={[
+          { labelKey: 'breadcrumb.learn', href: '/learn' },
+          { label: track.title, href: `/learn/${trackSlug}` },
+          { label: meta.title },
+        ]}
+        actions={<><LessonCompletedBadge lessonId={`${trackSlug}/${lessonSlug}`} /><ThemeToggle /><LanguageToggle /></>}
+      />
 
       <div className="flex-1 min-h-0">
-        <PlaygroundRoot
+        <LessonPlayground
+          lessonId={`${trackSlug}/${lessonSlug}`}
           template={config.sandpackTemplate}
-          files={allFiles}
-          hiddenFiles={['/__tests__.ts']}
-        >
-          <PlaygroundLayout
-            instructions={instructions}
-            testFile={config.testFile}
-          />
-        </PlaygroundRoot>
+          files={config.starterFiles}
+          testFile={config.testFile}
+          instructions={instructions}
+        />
       </div>
 
       <LessonNav track={trackSlug} prev={prev} next={next} />
