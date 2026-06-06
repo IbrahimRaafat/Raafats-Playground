@@ -1,0 +1,62 @@
+---
+title: Async / Await
+description: Write asynchronous TypeScript with Promises, async functions, and proper typing.
+difficulty: intermediate
+order: 10
+---
+
+## Async / Await in TypeScript
+
+TypeScript fully supports async/await and adds types to `Promise`.
+
+### The Promise type
+
+```ts
+function fetchUser(id: number): Promise<string> {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(`User #${id}`), 100);
+  });
+}
+```
+
+### async / await
+
+```ts
+async function greetUser(id: number): Promise<string> {
+  const user = await fetchUser(id);
+  return `Hello, ${user}!`;
+}
+```
+
+An `async` function always returns a `Promise`. TypeScript infers the resolved type.
+
+### Error handling
+
+```ts
+async function safeFetch(url: string): Promise<string> {
+  try {
+    const res = await fetch(url);
+    return await res.text();
+  } catch (err) {
+    return 'Failed to fetch';
+  }
+}
+```
+
+### Promise.all
+
+Run multiple async operations in parallel:
+
+```ts
+const [a, b] = await Promise.all([fetchUser(1), fetchUser(2)]);
+```
+
+---
+
+## Your task
+
+Export an `async` function named `delay` that:
+- Takes a `ms: number` parameter
+- Returns a `Promise<string>`
+- Waits `ms` milliseconds (using `setTimeout` inside a `new Promise`)
+- Resolves with the string `"done"`
