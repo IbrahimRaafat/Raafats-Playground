@@ -21,6 +21,36 @@ import App from './App'
 createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>)
 `
 
+// Rewrite vanilla-ts test code to use a dynamic import so missing exports become
+// `undefined` instead of throwing a SyntaxError that kills the runner before any
+// console.log runs.  Parcel bundles ESM natively, so a static named import from a
+// file that doesn't export that name throws at module evaluation time.
+function buildVanillaTsRunner(testFile: string): string {
+  const destructures: string[] = []
+  let code = testFile
+
+  // Drop type-only imports — they are erased at runtime
+  code = code.replace(/^import\s+type\s+\{[^}]*\}\s+from\s+['"]\.\/index['"]\s*;?\s*$/gm, '')
+
+  // Convert  import { x, y } from './index'  →  const { x, y } = __m
+  code = code.replace(
+    /^import\s+\{([^}]+)\}\s+from\s+['"]\.\/index['"]\s*;?\s*$/gm,
+    (_, bindings: string) => { destructures.push(`const { ${bindings.trim()} } = __m`); return '' }
+  )
+
+  // Convert  import Foo from './index'  →  const Foo = __m.default ?? __m
+  code = code.replace(
+    /^import\s+(\w+)\s+from\s+['"]\.\/index['"]\s*;?\s*$/gm,
+    (_, name: string) => { destructures.push(`const ${name} = __m.default ?? __m`); return '' }
+  )
+
+  return `;(async () => {
+const __m: any = await import('./index').catch(() => ({}))
+${destructures.join('\n')}
+${code.trim()}
+})()`
+}
+
 function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFile, instructions }: Props) {
   const handleTestResult = useCallback(
     (passed: boolean) => {
@@ -37,12 +67,14 @@ function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFil
   const runnerFile = isReact ? '/index.tsx' : '/__test_runner__.ts'
   const activeFile = isReact ? '/App.tsx' : '/index.ts'
 
-  // For react-ts: wrap DOM test code in setTimeout so React has time to paint before
-  // any document.querySelector calls run (React renders asynchronously).
+  // For react-ts: wrap DOM test code in setTimeout(1000ms) so React 19's concurrent
+  // renderer has time to commit and paint before any document.querySelector calls run.
+  // For vanilla-ts: wrap in an async IIFE using dynamic import so missing exports
+  // become `undefined` instead of throwing a SyntaxError before any console.log runs.
   const runnerContent = testFile
     ? isReact
-      ? `${REACT_RUNNER_BASE}setTimeout(() => {\n${testFile}\n}, 500)\n`
-      : testFile
+      ? `${REACT_RUNNER_BASE}setTimeout(() => {\n${testFile}\n}, 1000)\n`
+      : buildVanillaTsRunner(testFile)
     : isReact
       ? REACT_RUNNER_BASE
       : `import './index'\n`
