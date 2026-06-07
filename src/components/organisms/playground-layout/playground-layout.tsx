@@ -1,6 +1,7 @@
 'use client'
 
 import { Group, Panel, Separator } from 'react-resizable-panels'
+import { SandpackPreview } from '@codesandbox/sandpack-react'
 import { EditorPanel } from '@/components/atoms/editor-panel/editor-panel'
 import { PreviewPanel } from '@/components/atoms/preview-panel/preview-panel'
 import { ConsolePanel } from '@/components/atoms/console-panel/console-panel'
@@ -18,7 +19,15 @@ type Props = {
 
 function PlaygroundLayout({ instructions, hasTestFile, isReact, template, showRunButton, onTestResult }: Props) {
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
+      {/* Vanilla-ts needs a mounted SandpackPreview to create the execution iframe.
+          Without it the bundler compiles the code but nothing runs and console.log
+          is never captured by useSandpackConsole. */}
+      {!isReact && (
+        <div className="sr-only absolute" aria-hidden>
+          <SandpackPreview showNavigator={false} showOpenInCodeSandbox={false} />
+        </div>
+      )}
       <Toolbar
         hasTestFile={hasTestFile}
         isReact={isReact}
