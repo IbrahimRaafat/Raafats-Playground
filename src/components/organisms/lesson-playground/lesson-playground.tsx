@@ -107,6 +107,7 @@ function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFil
       hiddenFiles={allHiddenFiles}
       readOnlyFiles={readOnlyFiles}
       activeFile={activeFile}
+      autorun={!testFile}
     >
       <PlaygroundLayout
         instructions={instructions}
