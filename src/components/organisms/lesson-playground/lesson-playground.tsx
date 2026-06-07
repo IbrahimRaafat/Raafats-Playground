@@ -21,15 +21,15 @@ import App from './App'
 createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>)
 `
 
-// Rewrite vanilla-ts test code to use a dynamic import so missing exports become
-// `undefined` instead of throwing a SyntaxError that kills the runner before any
-// console.log runs.  Parcel bundles ESM natively, so a static named import from a
-// file that doesn't export that name throws at module evaluation time.
+// Rewrite vanilla-ts test code to use a namespace import so missing named exports
+// give `undefined` instead of throwing a SyntaxError that kills the runner before
+// any console.log runs.  In ESM, `import { x }` throws when `x` is not exported;
+// `import * as ns` never throws — it just gives an empty namespace object.
 function buildVanillaTsRunner(testFile: string): string {
   const destructures: string[] = []
   let code = testFile
 
-  // Drop type-only imports — they are erased at runtime
+  // Drop type-only imports — erased at runtime
   code = code.replace(/^import\s+type\s+\{[^}]*\}\s+from\s+['"]\.\/index['"]\s*;?\s*$/gm, '')
 
   // Convert  import { x, y } from './index'  →  const { x, y } = __m
@@ -41,14 +41,17 @@ function buildVanillaTsRunner(testFile: string): string {
   // Convert  import Foo from './index'  →  const Foo = __m.default ?? __m
   code = code.replace(
     /^import\s+(\w+)\s+from\s+['"]\.\/index['"]\s*;?\s*$/gm,
-    (_, name: string) => { destructures.push(`const ${name} = __m.default ?? __m`); return '' }
+    (_, name: string) => { destructures.push(`const ${name} = (__m as any).default ?? __m`); return '' }
   )
 
-  return `;(async () => {
-const __m: any = await import('./index').catch(() => ({}))
+  // Namespace import: missing exports are `undefined`, not a SyntaxError.
+  // Cast to `any` so TypeScript won't reject destructuring names the student
+  // hasn't exported yet.
+  return `import * as __m_ns from './index'
+const __m = __m_ns as any
 ${destructures.join('\n')}
 ${code.trim()}
-})()`
+`
 }
 
 function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFile, instructions }: Props) {
