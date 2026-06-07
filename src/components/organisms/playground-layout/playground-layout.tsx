@@ -6,7 +6,6 @@ import { PreviewPanel } from '@/components/atoms/preview-panel/preview-panel'
 import { ConsolePanel } from '@/components/atoms/console-panel/console-panel'
 import { TestResultsPanel } from '@/components/organisms/test-results-panel/test-results-panel'
 import { Toolbar } from '@/components/molecules/toolbar/toolbar'
-import { useState } from 'react'
 
 type Props = {
   instructions?: React.ReactNode
@@ -18,17 +17,6 @@ type Props = {
 }
 
 function PlaygroundLayout({ instructions, hasTestFile, isReact, template, showRunButton, onTestResult }: Props) {
-  const [testRunning, setTestRunning] = useState(false)
-
-  function handleTestResult(passed: boolean) {
-    setTestRunning(false)
-    onTestResult?.(passed)
-  }
-
-  function handleTestStart() {
-    setTestRunning(true)
-  }
-
   return (
     <div className="flex flex-col h-full">
       <Toolbar
@@ -36,8 +24,7 @@ function PlaygroundLayout({ instructions, hasTestFile, isReact, template, showRu
         isReact={isReact}
         template={template}
         showRunButton={showRunButton}
-        onTestResult={handleTestResult}
-        onTestStart={handleTestStart}
+        onTestResult={onTestResult}
       />
       <div className="flex-1 min-h-0">
         <Group orientation="horizontal" className="h-full">
@@ -72,7 +59,7 @@ function PlaygroundLayout({ instructions, hasTestFile, isReact, template, showRu
 
               <Panel defaultSize={isReact ? 45 : 100} minSize={20}>
                 {hasTestFile ? (
-                  <TestResultsPanel isRunning={testRunning} />
+                  <TestResultsPanel />
                 ) : (
                   <ConsolePanel />
                 )}

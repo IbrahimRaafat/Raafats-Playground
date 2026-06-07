@@ -13,10 +13,9 @@ type Props = {
   template?: string
   showRunButton?: boolean
   onTestResult?: (passed: boolean) => void
-  onTestStart?: () => void
 }
 
-function Toolbar({ hasTestFile, showRunButton, onTestResult, onTestStart }: Props) {
+function Toolbar({ hasTestFile, showRunButton, onTestResult }: Props) {
   const { sandpack } = useSandpack()
   const { logs, reset: resetConsole } = useSandpackConsole({ resetOnPreviewRestart: true })
   const [testStatus, setTestStatus] = useState<'idle' | 'running' | 'pass' | 'fail'>('idle')
@@ -36,7 +35,6 @@ function Toolbar({ hasTestFile, showRunButton, onTestResult, onTestStart }: Prop
   function handleRunTests() {
     if (!hasTestFile) return
     setTestStatus('running')
-    onTestStart?.()
     resetConsole()
     // Runner already has the test code — just refresh the already-compiled bundle (instant).
     sandpack.runSandpack()

@@ -1,6 +1,6 @@
 'use client'
 
-import { useSandpackConsole } from '@codesandbox/sandpack-react'
+import { useSandpack, useSandpackConsole } from '@codesandbox/sandpack-react'
 import { CheckCircle2, XCircle, Clock } from 'lucide-react'
 
 type TestCase = {
@@ -34,30 +34,28 @@ function parseTestCases(logs: ReturnType<typeof useSandpackConsole>['logs']): Te
   return cases
 }
 
-type Props = {
-  isRunning?: boolean
-}
-
-function TestResultsPanel({ isRunning }: Props) {
+function TestResultsPanel() {
+  const { sandpack } = useSandpack()
   const { logs } = useSandpackConsole({ resetOnPreviewRestart: true })
   const cases = parseTestCases(logs)
   const passCount = cases.filter((c) => c.status === 'pass').length
   const failCount = cases.filter((c) => c.status === 'fail').length
+  const isBundling = sandpack.status === 'running'
 
-  if (cases.length === 0 && !isRunning) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center gap-2 text-muted-foreground text-xs p-4">
-        <Clock className="h-5 w-5 opacity-40" />
-        <span>Click <strong>Run Tests</strong> to see results</span>
-      </div>
-    )
-  }
-
-  if (isRunning && cases.length === 0) {
+  if (cases.length === 0 && isBundling) {
     return (
       <div className="h-full flex flex-col items-center justify-center gap-2 text-muted-foreground text-xs p-4">
         <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
         <span>Running tests…</span>
+      </div>
+    )
+  }
+
+  if (cases.length === 0) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center gap-2 text-muted-foreground text-xs p-4">
+        <Clock className="h-5 w-5 opacity-40" />
+        <span>Click <strong>Run Tests</strong> to see results</span>
       </div>
     )
   }
@@ -81,7 +79,7 @@ function TestResultsPanel({ isRunning }: Props) {
             )}
           </>
         )}
-        {isRunning && <div className="ms-auto h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin text-muted-foreground" />}
+        {isBundling && <div className="ms-auto h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin text-muted-foreground" />}
       </div>
 
       {/* Test case list */}
