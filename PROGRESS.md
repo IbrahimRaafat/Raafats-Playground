@@ -63,11 +63,11 @@
 - Announcement banner, floating toast, live indicator
 
 #### Test runner (fully resolved)
-- **Hidden runner pattern:** `/__test_runner__.[ts|tsx]` set as `customSetup.entry`; user files never modified
-- `/__tests__.ts` visible read-only tab so users can see what tests they must pass
+- **Hidden runner pattern:** user files never modified; `/__tests__.ts` visible read-only tab so users can see test requirements
 - `TestResultsPanel` parses ✅/❌ console logs and shows per-test-case rows
-- **Performance fix (session 3):** Runner file is pre-populated with test code at lesson initialization. Tests run automatically on every code change (watch mode). "Run Tests" calls `sandpack.runSandpack()` — refreshes the already-compiled bundle (~instant) instead of triggering a full re-bundle via Sandpack's hosted Parcel (~5–15s).
-- **Spinner fix (session 3):** `TestResultsPanel` self-manages loading state via `sandpack.status === 'running'`; removed external `isRunning`/`testRunning` prop chain that caused permanent stuck spinner on rapid clicks.
+- **Performance fix (session 3):** Runner pre-populated at lesson init; "Run Tests" calls `sandpack.runSandpack()` (~instant refresh) instead of a full re-bundle (~5–15s).
+- **Spinner fix (session 3):** `TestResultsPanel` self-manages loading state; removed external prop chain that caused permanent stuck spinner on rapid clicks.
+- **React runner fix (session 4):** `react-ts` runner now overrides `/index.tsx` (the template's actual Sandpack entry) instead of creating a second `/__test_runner__.tsx`. The template already has its own `createRoot()` in `index.tsx`; a second `createRoot()` on the same `#root` element throws in React 18 and kills the runner before any output is produced. DOM test code is wrapped in `setTimeout(500ms)` to let React paint before `document.querySelector` calls run. `customSetup.entry` removed for react-ts (no longer needed).
 
 #### Interview questions + Supabase
 - **Supabase project:** `ts-playground` (eu-central-1, free tier)

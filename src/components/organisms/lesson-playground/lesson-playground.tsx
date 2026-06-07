@@ -30,14 +30,18 @@ function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFil
   )
 
   const isReact = template === 'react-ts'
-  const runnerFile = isReact ? '/__test_runner__.tsx' : '/__test_runner__.ts'
+  // For react-ts: override /index.tsx (the template's own entry) so there is only ONE
+  // createRoot() call. Creating a second root on the same #root element throws in React 18
+  // and kills the runner before any test output is produced.
+  // For vanilla-ts: use a separate /__test_runner__.ts and override index.html to load it.
+  const runnerFile = isReact ? '/index.tsx' : '/__test_runner__.ts'
   const activeFile = isReact ? '/App.tsx' : '/index.ts'
 
-  // Pre-populate runner with full test code so no re-bundle is needed on "Run Tests".
-  // Tests run automatically on every code change (watch mode); button just forces a refresh.
+  // For react-ts: wrap DOM test code in setTimeout so React has time to paint before
+  // any document.querySelector calls run (React renders asynchronously).
   const runnerContent = testFile
     ? isReact
-      ? `${REACT_RUNNER_BASE}\n${testFile}`
+      ? `${REACT_RUNNER_BASE}setTimeout(() => {\n${testFile}\n}, 500)\n`
       : testFile
     : isReact
       ? REACT_RUNNER_BASE
@@ -64,7 +68,9 @@ function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFil
     ? [...hiddenFiles, runnerFile, ...(runnerHtml ? ['/index.html'] : [])]
     : hiddenFiles
   const readOnlyFiles = testFile ? ['/__tests__.ts'] : []
-  const customSetup = testFile ? { entry: runnerFile } : undefined
+  // For react-ts, /index.tsx is already the default entry — no customSetup needed.
+  // For vanilla-ts, tell the bundler to start from /__test_runner__.ts.
+  const customSetup = !isReact && testFile ? { entry: runnerFile } : undefined
 
   return (
     <PlaygroundRoot
