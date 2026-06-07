@@ -53,7 +53,10 @@ function PlaygroundRoot({
       theme={sandpackThemes[theme]}
       options={{
         recompileMode: 'delayed',
-        recompileDelay: 500,
+        // When autorun=false (lessons with tests), use a huge delay so code edits
+        // never trigger automatic test re-runs.  runSandpack() bypasses this delay
+        // entirely, so the Run Tests button still works instantly.
+        recompileDelay: autorun ? 500 : 9_999_999,
         autorun,
         ...(activeFile ? { activeFile } : {}),
       }}
