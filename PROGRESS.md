@@ -62,13 +62,12 @@
 - Company questions preview section
 - Announcement banner, floating toast, live indicator
 
-#### Test runner fix (critical)
-- **Problem:** Toolbar was injecting test code into `index.ts`. On Vercel, Parcel's autorun raced with the injection causing `Unterminated regular expression` and timeouts.
-- **Fix:** Hidden `/__test_runner__.[ts|tsx]` file set as `customSetup.entry`. Test code is written there; user files are never modified.
-- `/__tests__.ts` is now a visible read-only tab so users can see what they're being tested on
-- `TestResultsPanel` parses console logs and shows per-test-case pass/fail rows
-- 30-second auto-fail timeout so tests never hang indefinitely
-- Removed broad `.includes('error')` detection that caused false fails from compiler errors
+#### Test runner (fully resolved)
+- **Hidden runner pattern:** `/__test_runner__.[ts|tsx]` set as `customSetup.entry`; user files never modified
+- `/__tests__.ts` visible read-only tab so users can see what tests they must pass
+- `TestResultsPanel` parses ✅/❌ console logs and shows per-test-case rows
+- **Performance fix (session 3):** Runner file is pre-populated with test code at lesson initialization. Tests run automatically on every code change (watch mode). "Run Tests" calls `sandpack.runSandpack()` — refreshes the already-compiled bundle (~instant) instead of triggering a full re-bundle via Sandpack's hosted Parcel (~5–15s).
+- **Spinner fix (session 3):** `TestResultsPanel` self-manages loading state via `sandpack.status === 'running'`; removed external `isRunning`/`testRunning` prop chain that caused permanent stuck spinner on rapid clicks.
 
 #### Interview questions + Supabase
 - **Supabase project:** `ts-playground` (eu-central-1, free tier)
