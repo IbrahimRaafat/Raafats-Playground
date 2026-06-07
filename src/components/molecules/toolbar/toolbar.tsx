@@ -13,9 +13,10 @@ type Props = {
   template?: string
   showRunButton?: boolean
   onTestResult?: (passed: boolean) => void
+  onRunTests?: () => void
 }
 
-function Toolbar({ hasTestFile, showRunButton, onTestResult }: Props) {
+function Toolbar({ hasTestFile, showRunButton, onTestResult, onRunTests }: Props) {
   const { sandpack } = useSandpack()
   const { logs, reset: resetConsole } = useSandpackConsole({ resetOnPreviewRestart: true })
   const [testStatus, setTestStatus] = useState<'idle' | 'running' | 'pass' | 'fail'>('idle')
@@ -37,10 +38,10 @@ function Toolbar({ hasTestFile, showRunButton, onTestResult }: Props) {
 
   function handleRunTests() {
     if (!hasTestFile) return
+    onRunTests?.()
     manualRunActiveRef.current = true
     setTestStatus('running')
     resetConsole()
-    // Runner already has the test code — just refresh the already-compiled bundle (instant).
     sandpack.runSandpack()
 
     // Auto-fail safety net (only for manually-triggered runs)
@@ -105,44 +106,46 @@ function Toolbar({ hasTestFile, showRunButton, onTestResult }: Props) {
   }, [logs, onTestResult])
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/40">
+    <div className="flex items-center justify-between px-3 py-2 border-t border-border bg-muted/20 shrink-0">
       <Button variant="ghost" size="sm" onClick={handleReset} className="gap-1.5">
         <RotateCcw className="h-3.5 w-3.5" />
         {t('toolbar.reset')}
       </Button>
 
-      {showRunButton && !hasTestFile && (
-        <Button variant="default" size="sm" onClick={handleRun} className="gap-1.5">
-          <Triangle className="h-3 w-3 fill-current" />
-          {t('toolbar.run')}
-        </Button>
-      )}
+      <div className="flex items-center gap-2">
+        {testStatus === 'pass' && (
+          <Badge variant="default" className="gap-1 bg-green-600 hover:bg-green-600">
+            <CheckCircle2 className="h-3 w-3" />
+            {t('test.passed')}
+          </Badge>
+        )}
+        {testStatus === 'fail' && (
+          <Badge variant="destructive" className="gap-1">
+            <XCircle className="h-3 w-3" />
+            {t('test.failed')}
+          </Badge>
+        )}
 
-      {hasTestFile && (
-        <Button
-          variant="default"
-          size="sm"
-          onClick={handleRunTests}
-          disabled={testStatus === 'running'}
-          className="gap-1.5"
-        >
-          <Play className="h-3.5 w-3.5" />
-          {t('toolbar.runTests')}
-        </Button>
-      )}
+        {showRunButton && !hasTestFile && (
+          <Button variant="default" size="sm" onClick={handleRun} className="gap-1.5">
+            <Triangle className="h-3 w-3 fill-current" />
+            {t('toolbar.run')}
+          </Button>
+        )}
 
-      {testStatus === 'pass' && (
-        <Badge variant="default" className="gap-1 bg-green-600 hover:bg-green-600">
-          <CheckCircle2 className="h-3 w-3" />
-          {t('test.passed')}
-        </Badge>
-      )}
-      {testStatus === 'fail' && (
-        <Badge variant="destructive" className="gap-1">
-          <XCircle className="h-3 w-3" />
-          {t('test.failed')}
-        </Badge>
-      )}
+        {hasTestFile && (
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleRunTests}
+            disabled={testStatus === 'running'}
+            className="gap-1.5"
+          >
+            <Play className="h-3.5 w-3.5" />
+            {t('toolbar.runTests')}
+          </Button>
+        )}
+      </div>
     </div>
   )
 }
