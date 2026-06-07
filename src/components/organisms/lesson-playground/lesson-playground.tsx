@@ -72,8 +72,8 @@ function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFil
 
   // For react-ts: wrap DOM test code in setTimeout(1000ms) so React 19's concurrent
   // renderer has time to commit and paint before any document.querySelector calls run.
-  // For vanilla-ts: wrap in an async IIFE using dynamic import so missing exports
-  // become `undefined` instead of throwing a SyntaxError before any console.log runs.
+  // For vanilla-ts: use namespace import so missing named exports give `undefined`
+  // instead of a SyntaxError that kills the runner before any console.log runs.
   const runnerContent = testFile
     ? isReact
       ? `${REACT_RUNNER_BASE}setTimeout(() => {\n${testFile}\n}, 1000)\n`
@@ -82,12 +82,23 @@ function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFil
       ? REACT_RUNNER_BASE
       : `import './index'\n`
 
-  // For vanilla-ts: override index.html to load the test runner.
-  // The default template HTML has <script src="index.ts">, which loads the user's file
-  // instead of the test runner. Overriding it ensures the runner actually executes.
+  // For vanilla-ts: we must override BOTH index.html AND package.json.
+  //
+  // Sandpack's SandpackRuntime.getFiles() short-circuits when /package.json already
+  // exists (the vanilla-ts template includes one with "main": "/index.ts") and never
+  // calls addPackageJSONIfNeeded — so customSetup.entry is silently ignored.
+  // Parcel therefore always bundles from index.ts regardless of what we pass as entry.
+  //
+  // The fix: supply our own /package.json with "main" pointing at the runner, and also
+  // override /index.html so the browser executes the correct compiled bundle.
   const runnerHtml =
     !isReact && testFile
       ? `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head><body><script src="${runnerFile.slice(1)}"></script></body></html>`
+      : undefined
+
+  const runnerPackageJson =
+    !isReact && testFile
+      ? JSON.stringify({ dependencies: {}, devDependencies: { typescript: '^4.0.0' }, main: runnerFile }, null, 2)
       : undefined
 
   const allFiles = testFile
@@ -96,15 +107,19 @@ function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFil
         '/__tests__.ts': testFile,
         [runnerFile]: runnerContent,
         ...(runnerHtml ? { '/index.html': runnerHtml } : {}),
+        ...(runnerPackageJson ? { '/package.json': runnerPackageJson } : {}),
       }
     : files
 
   const allHiddenFiles = testFile
-    ? [...hiddenFiles, runnerFile, ...(runnerHtml ? ['/index.html'] : [])]
+    ? [
+        ...hiddenFiles,
+        runnerFile,
+        ...(runnerHtml ? ['/index.html'] : []),
+        ...(runnerPackageJson ? ['/package.json'] : []),
+      ]
     : hiddenFiles
   const readOnlyFiles = testFile ? ['/__tests__.ts'] : []
-  // For react-ts, /index.tsx is already the default entry — no customSetup needed.
-  // For vanilla-ts, tell the bundler to start from /__test_runner__.ts.
   const customSetup = !isReact && testFile ? { entry: runnerFile } : undefined
 
   return (
