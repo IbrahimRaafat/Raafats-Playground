@@ -1,0 +1,56 @@
+---
+title: Arrays & Tuples
+description: Type-safe collections with arrays and fixed-length tuples.
+difficulty: intermediate
+order: 5
+---
+
+## Arrays
+
+Annotate an array by appending `[]` to the element type:
+
+```ts
+const numbers: number[] = [1, 2, 3];
+const names: string[] = ["Alice", "Bob"];
+```
+
+Or use the generic form `Array<T>`:
+
+```ts
+const flags: Array<boolean> = [true, false, true];
+```
+
+TypeScript will stop you from pushing the wrong type:
+
+```ts
+numbers.push("four"); // ❌ Error: Argument of type 'string' is not assignable to parameter of type 'number'
+```
+
+## Common array methods
+
+```ts
+const scores = [90, 85, 78, 92];
+
+const passing = scores.filter(s => s >= 80);   // number[]
+const doubled = scores.map(s => s * 2);         // number[]
+const total   = scores.reduce((a, b) => a + b, 0); // number
+```
+
+## Tuples
+
+A **tuple** is an array with a fixed length and known type at each position:
+
+```ts
+type Coordinate = [number, number];
+const point: Coordinate = [10, 20];
+
+const [x, y] = point; // destructuring
+```
+
+---
+
+## Your task
+
+1. Export a `scores` array of `number[]` containing at least three values.
+2. Export a `passing` array that contains only scores **greater than or equal to 80**, derived from `scores` using `.filter()`.
+3. Export a `range` tuple typed as `[number, number]` representing the `[min, max]` of your scores.

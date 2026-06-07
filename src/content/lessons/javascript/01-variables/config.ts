@@ -15,14 +15,43 @@ export const config: LessonConfig = {
 console.log(greeting);
 `,
   },
-  testFile: `import { greeting } from './index';
+  testFile: `import { greeting } from './index'
 
-if (typeof greeting !== 'string') {
-  console.log('❌ greeting must be a string, got:', typeof greeting);
-} else if (greeting !== 'Hello, World!') {
-  console.log('❌ Expected "Hello, World!" but got:', greeting);
+let passed = 0
+let failed = 0
+
+function check(name: string, ok: boolean, hint?: string) {
+  if (ok) {
+    console.log('✅ ' + name)
+    passed++
+  } else {
+    console.log('❌ ' + name + (hint ? ': ' + hint : ''))
+    failed++
+  }
+}
+
+check(
+  'greeting is exported',
+  typeof greeting !== 'undefined',
+  'Did you use: export const greeting = ...'
+)
+
+check(
+  'greeting is a string',
+  typeof greeting === 'string',
+  'Expected type string, got ' + typeof greeting
+)
+
+check(
+  'greeting equals "Hello, World!"',
+  greeting === 'Hello, World!',
+  'Got "' + greeting + '"'
+)
+
+if (failed === 0) {
+  console.log('✅ All tests passed!')
 } else {
-  console.log('✅ All tests passed!');
+  console.log('❌ ' + failed + ' test(s) failed')
 }
 `,
 }

@@ -1,0 +1,75 @@
+---
+title: Custom Hooks
+description: Extract and reuse stateful logic across components with custom hooks.
+difficulty: intermediate
+order: 8
+---
+
+## What is a custom hook?
+
+A **custom hook** is a function whose name starts with `use` that calls other hooks. It lets you extract stateful logic from a component and reuse it anywhere.
+
+```tsx
+// Before — logic stuck inside the component
+function SearchPage() {
+  const [query, setQuery] = useState("");
+  const stored = localStorage.getItem("lastQuery");
+  // ...
+
+// After — extracted into a reusable hook
+function useLocalStorage<T>(key: string, initial: T) {
+  const [value, setValue] = useState<T>(() => {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : initial;
+    } catch {
+      return initial;
+    }
+  });
+
+  function set(newValue: T) {
+    setValue(newValue);
+    localStorage.setItem(key, JSON.stringify(newValue));
+  }
+
+  return [value, set] as const;
+}
+```
+
+## Rules of hooks (still apply!)
+
+Custom hooks follow the same rules:
+- Only call hooks at the top level (not inside loops/conditions)
+- Only call hooks from React functions or other hooks
+
+## A counter hook
+
+```tsx
+function useCounter(initial = 0) {
+  const [count, setCount] = useState(initial);
+  const increment = () => setCount(c => c + 1);
+  const decrement = () => setCount(c => c - 1);
+  const reset = () => setCount(initial);
+  return { count, increment, decrement, reset };
+}
+
+// Using it — clean and readable:
+function App() {
+  const { count, increment, reset } = useCounter(10);
+  return (
+    <>
+      <p>{count}</p>
+      <button onClick={increment}>+</button>
+      <button onClick={reset}>Reset</button>
+    </>
+  );
+}
+```
+
+---
+
+## Your task
+
+1. Create a `useCounter` custom hook that accepts an `initial` number (default `0`) and returns `{ count, increment, decrement, reset }`
+2. Use `useCounter` inside `App` to render a counter with **Increment**, **Decrement**, and **Reset** buttons
+3. The `<p>` must display the current count

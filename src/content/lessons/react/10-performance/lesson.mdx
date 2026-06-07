@@ -1,0 +1,60 @@
+---
+title: Performance
+description: Avoid unnecessary re-renders with useMemo and useCallback.
+difficulty: advanced
+order: 10
+---
+
+## React Performance
+
+React re-renders a component whenever its state or props change. Most of the time this is fine — but for expensive computations or stable function references, React provides two hooks.
+
+### useMemo
+
+Memoize the result of an expensive computation:
+
+```tsx
+import { useMemo } from 'react'
+
+function ProductList({ items, filter }: Props) {
+  const filtered = useMemo(
+    () => items.filter((item) => item.name.includes(filter)),
+    [items, filter]
+  );
+
+  return <ul>{filtered.map((i) => <li key={i.id}>{i.name}</li>)}</ul>;
+}
+```
+
+`useMemo` recalculates only when `[items, filter]` changes.
+
+### useCallback
+
+Memoize a function reference so child components don't re-render unnecessarily:
+
+```tsx
+import { useCallback } from 'react'
+
+function Parent() {
+  const handleClick = useCallback(() => {
+    console.log('clicked');
+  }, []); // stable reference — recreated only when deps change
+
+  return <Child onClick={handleClick} />;
+}
+```
+
+### When to optimize
+
+Don't optimize by default. Measure first with React DevTools Profiler. Apply `useMemo` / `useCallback` when:
+- A computation is visibly slow (large lists, heavy math)
+- A callback causes a memoized child to re-render needlessly
+
+---
+
+## Your task
+
+Export a component `ExpensiveList` that:
+- Accepts `items: number[]` and `multiplier: number` as props
+- Uses `useMemo` to compute the doubled list: `items.map(n => n * multiplier)`
+- Renders each computed value in a `<li>` inside a `<ul>`

@@ -1,0 +1,57 @@
+---
+title: Union Types & Narrowing
+description: Model values that can be one of several types, and narrow them safely.
+difficulty: intermediate
+order: 6
+---
+
+## Union types
+
+A **union type** says a value can be one of several types, separated by `|`:
+
+```ts
+let id: string | number;
+id = "abc-123"; // ✓
+id = 42;        // ✓
+id = true;      // ❌ Error
+```
+
+This is useful when a function accepts or returns values of different shapes.
+
+## Type narrowing
+
+When you have a union, TypeScript needs help knowing which specific type you're working with. Use `typeof` or `in` checks:
+
+```ts
+function formatId(id: string | number): string {
+  if (typeof id === "string") {
+    return id.toUpperCase(); // TypeScript knows id is string here
+  }
+  return id.toFixed(0);     // TypeScript knows id is number here
+}
+```
+
+## Literal types
+
+You can also union specific string/number values to build an enum-like type:
+
+```ts
+type Direction = "north" | "south" | "east" | "west";
+
+function move(dir: Direction) {
+  console.log("Moving", dir);
+}
+
+move("north"); // ✓
+move("up");    // ❌ Error
+```
+
+---
+
+## Your task
+
+1. Export a function `formatValue` that accepts a `string | number` and:
+   - If it's a `string`: returns it in **UPPERCASE**
+   - If it's a `number`: returns it multiplied by **2**
+
+2. Export a type alias `Status` that is a union of the string literals `"active"`, `"inactive"`, and `"pending"`.

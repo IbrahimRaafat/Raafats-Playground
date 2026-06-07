@@ -1,11 +1,15 @@
 import type { NextConfig } from 'next'
 import { realpathSync } from 'fs'
 
-// process.cwd() preserves the casing typed by the user (e.g. "desktop\projects"),
-// but the SWC compiler uses realpathSync internally (e.g. "Desktop\Projects").
-// This mismatch causes webpack to create two instances of the same Next.js modules,
-// breaking React context invariants. Normalizing cwd to the real FS path fixes it.
-try { process.chdir(realpathSync(process.cwd())) } catch {}
+// Normalize cwd to the NTFS-canonical casing (e.g. "Desktop\Projects" not "desktop\projects").
+// pnpm must be installed from this same canonical path so its virtual store paths match
+// what webpack's SWC compiler resolves via native Windows APIs.
+const realCwd = (() => {
+  try { return (realpathSync as any).native(process.cwd()) } catch {}
+  try { return realpathSync(process.cwd()) } catch {}
+  return process.cwd()
+})()
+try { process.chdir(realCwd) } catch {}
 
 const nextConfig: NextConfig = {
   transpilePackages: [
@@ -16,11 +20,9 @@ const nextConfig: NextConfig = {
     'next-mdx-remote',
   ],
   turbopack: {
-    root: process.cwd(),
+    root: realCwd,
   },
   webpack: (config) => {
-    // pnpm symlinks on Windows resolve to mixed-case paths, causing webpack to
-    // load duplicate module instances and breaking Next.js layout router invariants.
     config.resolve.symlinks = false
     return config
   },

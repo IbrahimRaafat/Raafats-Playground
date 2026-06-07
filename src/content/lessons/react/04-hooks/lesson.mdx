@@ -1,0 +1,73 @@
+---
+title: Effects with useEffect
+description: Run side effects in function components using the useEffect hook.
+difficulty: intermediate
+order: 4
+---
+
+## What is a side effect?
+
+A **side effect** is anything that reaches outside of the render cycle: data fetching, subscriptions, timers, DOM manipulation. React's `useEffect` hook lets you run effects after the component renders.
+
+## Basic usage
+
+```tsx
+import { useEffect } from "react";
+
+useEffect(() => {
+  document.title = "Hello from React";
+});
+```
+
+Without a second argument, this runs after **every** render — usually too much.
+
+## The dependency array
+
+The second argument controls **when** the effect runs:
+
+```tsx
+// Run once on mount
+useEffect(() => {
+  fetchData();
+}, []);
+
+// Run when 'query' changes
+useEffect(() => {
+  search(query);
+}, [query]);
+```
+
+## Cleanup
+
+Return a function to clean up the effect (clear timers, cancel subscriptions, etc.):
+
+```tsx
+useEffect(() => {
+  const id = setInterval(() => setTick(t => t + 1), 1000);
+  return () => clearInterval(id); // cleanup
+}, []);
+```
+
+## Combining useState + useEffect
+
+```tsx
+const [data, setData] = useState<string | null>(null);
+
+useEffect(() => {
+  // Simulate fetching
+  setTimeout(() => setData("Loaded!"), 1000);
+}, []);
+```
+
+---
+
+## Your task
+
+Build a component that:
+
+1. Has a `count` state starting at **0**
+2. Uses `useEffect` to **update the document title** to `"Count: {count}"` every time `count` changes
+3. Has an **Increment** button that adds 1 to count
+4. Displays the current count in a `<p>` element
+
+The tests will click Increment and check that `document.title` updates.

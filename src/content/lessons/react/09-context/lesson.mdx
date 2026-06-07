@@ -1,0 +1,57 @@
+---
+title: React Context
+description: Share state across the component tree without prop drilling using useContext.
+difficulty: intermediate
+order: 9
+---
+
+## React Context
+
+Context lets you pass data through the component tree without manually threading props at every level.
+
+### Creating a context
+
+```tsx
+import { createContext, useContext } from 'react'
+
+type Theme = 'light' | 'dark'
+
+const ThemeContext = createContext<Theme>('light')
+```
+
+### Providing context
+
+Wrap the part of the tree that needs the value:
+
+```tsx
+function App() {
+  return (
+    <ThemeContext.Provider value="dark">
+      <Toolbar />
+    </ThemeContext.Provider>
+  );
+}
+```
+
+### Consuming context
+
+```tsx
+function Toolbar() {
+  const theme = useContext(ThemeContext);
+  return <div className={theme}>I am {theme}</div>;
+}
+```
+
+### When to use context
+
+Use context for values that many components at different nesting levels need: theme, locale, current user, auth status. Avoid it for state that only a few nearby components need — props work better there.
+
+---
+
+## Your task
+
+Create a `UserContext` with the value type `{ name: string }`.
+
+In `App`:
+1. Provide `{ name: 'Alice' }` via `UserContext.Provider`
+2. Inside a child `Welcome` component, consume the context and render `<p>Welcome, {name}!</p>`

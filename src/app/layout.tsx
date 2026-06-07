@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Inter, Cairo } from 'next/font/google'
 import './globals.css'
+import { ThemeProvider } from '@/components/providers/theme-provider/theme-provider'
+import { LocaleProvider } from '@/components/providers/locale-provider/locale-provider'
 
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
+const inter = Inter({ variable: '--font-sans', subsets: ['latin'] })
+const cairo = Cairo({ variable: '--font-arabic', subsets: ['arabic', 'latin'], weight: ['400', '500', '600', '700'] })
 
 export const metadata: Metadata = {
   title: 'TS Playground — Learn TypeScript & React',
@@ -12,8 +14,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full dark`}>
-      <body className="h-full bg-background text-foreground antialiased">{children}</body>
+    <html lang="en" className={`${inter.variable} ${cairo.variable} h-full dark`} suppressHydrationWarning>
+      <body className="h-full bg-background text-foreground antialiased">
+        <ThemeProvider>
+          <LocaleProvider>
+            {children}
+          </LocaleProvider>
+        </ThemeProvider>
+      </body>
     </html>
   )
 }

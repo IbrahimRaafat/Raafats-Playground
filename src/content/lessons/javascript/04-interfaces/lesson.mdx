@@ -1,0 +1,57 @@
+---
+title: Interfaces & Object Types
+description: Define the shape of objects with interfaces and type aliases.
+difficulty: beginner
+order: 4
+---
+
+## Describing object shapes
+
+TypeScript lets you describe the exact shape an object must have using an **interface** or a **type alias**.
+
+### Interface
+
+```ts
+interface User {
+  name: string;
+  age: number;
+}
+
+const user: User = { name: "Alice", age: 30 };
+```
+
+An interface is like a contract. If you forget a field or use the wrong type TypeScript will tell you immediately.
+
+### Optional fields
+
+Add `?` to mark a field as optional:
+
+```ts
+interface Product {
+  id: number;
+  name: string;
+  description?: string; // optional
+}
+```
+
+### Type aliases
+
+`type` does the same thing and is often interchangeable with `interface`:
+
+```ts
+type Point = {
+  x: number;
+  y: number;
+};
+```
+
+---
+
+## Your task
+
+Define and export a `User` interface with:
+- `name: string`
+- `age: number`
+- `email?: string` (optional)
+
+Then create and export a `user` object that matches it, with at least `name` and `age` filled in.

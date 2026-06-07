@@ -1,0 +1,65 @@
+'use client'
+
+import { useCallback } from 'react'
+import { markComplete } from '@/lib/progress/store'
+import { PlaygroundRoot } from '@/components/providers/playground-root/playground-root'
+import { PlaygroundLayout } from '@/components/organisms/playground-layout/playground-layout'
+import type { SandpackTemplate } from '@/lib/content/types'
+
+type Props = {
+  lessonId: string
+  template?: SandpackTemplate
+  files: Record<string, string>
+  hiddenFiles?: string[]
+  testFile?: string
+  instructions?: React.ReactNode
+}
+
+const REACT_RUNNER_BASE = `import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import App from './App'
+createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>)
+`
+
+function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFile, instructions }: Props) {
+  const handleTestResult = useCallback(
+    (passed: boolean) => {
+      if (passed) markComplete(lessonId)
+    },
+    [lessonId]
+  )
+
+  const isReact = template === 'react-ts'
+  const runnerFile = isReact ? '/__test_runner__.tsx' : '/__test_runner__.ts'
+  const runnerBase = isReact ? REACT_RUNNER_BASE : `import './index'\n`
+  const activeFile = isReact ? '/App.tsx' : '/index.ts'
+
+  const allFiles = testFile
+    ? { ...files, '/__tests__.ts': testFile, [runnerFile]: runnerBase }
+    : files
+
+  const allHiddenFiles = testFile ? [...hiddenFiles, runnerFile] : hiddenFiles
+  const readOnlyFiles = testFile ? ['/__tests__.ts'] : []
+  const customSetup = testFile ? { entry: runnerFile } : undefined
+
+  return (
+    <PlaygroundRoot
+      template={template}
+      files={allFiles}
+      hiddenFiles={allHiddenFiles}
+      readOnlyFiles={readOnlyFiles}
+      customSetup={customSetup}
+      activeFile={activeFile}
+    >
+      <PlaygroundLayout
+        instructions={instructions}
+        hasTestFile={!!testFile}
+        isReact={isReact}
+        template={template}
+        onTestResult={handleTestResult}
+      />
+    </PlaygroundRoot>
+  )
+}
+
+export { LessonPlayground }
