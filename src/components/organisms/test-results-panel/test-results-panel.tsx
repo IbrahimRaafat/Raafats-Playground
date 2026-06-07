@@ -1,7 +1,8 @@
 'use client'
 
-import { useSandpack, useSandpackConsole } from '@codesandbox/sandpack-react'
+import { useSandpackConsole } from '@codesandbox/sandpack-react'
 import { CheckCircle2, XCircle, Clock } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
 
 type TestCase = {
   status: 'pass' | 'fail'
@@ -35,14 +36,41 @@ function parseTestCases(logs: ReturnType<typeof useSandpackConsole>['logs']): Te
 }
 
 function TestResultsPanel() {
-  const { sandpack } = useSandpack()
   const { logs } = useSandpackConsole({ resetOnPreviewRestart: true })
   const cases = parseTestCases(logs)
   const passCount = cases.filter((c) => c.status === 'pass').length
   const failCount = cases.filter((c) => c.status === 'fail').length
-  const isBundling = sandpack.status === 'running'
 
-  if (cases.length === 0 && isBundling) {
+  // Track running state locally — don't rely on sandpack.status which can stay 'running'
+  // permanently while the hosted bundler is connecting on initial load.
+  const [isRunning, setIsRunning] = useState(true) // autorun=true fires immediately
+  const prevLogsLenRef = useRef(0)
+  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    const prevLen = prevLogsLenRef.current
+    prevLogsLenRef.current = logs.length
+
+    if (logs.length === 0 && prevLen > 0) {
+      // Logs cleared by preview restart — a new run is starting
+      setIsRunning(true)
+      if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current)
+      safetyTimerRef.current = setTimeout(() => setIsRunning(false), 12_000)
+    } else if (logs.length > 0) {
+      // First log arrived — stop spinner
+      setIsRunning(false)
+      if (safetyTimerRef.current) { clearTimeout(safetyTimerRef.current); safetyTimerRef.current = null }
+    }
+  }, [logs.length])
+
+  // Start a safety timer on mount for the initial autorun.
+  // If the test runner never produces logs (e.g. bundler stuck), stop spinning after 12s.
+  useEffect(() => {
+    safetyTimerRef.current = setTimeout(() => setIsRunning(false), 12_000)
+    return () => { if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current) }
+  }, [])
+
+  if (cases.length === 0 && isRunning) {
     return (
       <div className="h-full flex flex-col items-center justify-center gap-2 text-muted-foreground text-xs p-4">
         <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
@@ -79,7 +107,7 @@ function TestResultsPanel() {
             )}
           </>
         )}
-        {isBundling && <div className="ms-auto h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin text-muted-foreground" />}
+        {isRunning && <div className="ms-auto h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin text-muted-foreground" />}
       </div>
 
       {/* Test case list */}

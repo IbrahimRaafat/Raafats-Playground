@@ -43,11 +43,26 @@ function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFil
       ? REACT_RUNNER_BASE
       : `import './index'\n`
 
+  // For vanilla-ts: override index.html to load the test runner.
+  // The default template HTML has <script src="index.ts">, which loads the user's file
+  // instead of the test runner. Overriding it ensures the runner actually executes.
+  const runnerHtml =
+    !isReact && testFile
+      ? `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head><body><script src="${runnerFile.slice(1)}"></script></body></html>`
+      : undefined
+
   const allFiles = testFile
-    ? { ...files, '/__tests__.ts': testFile, [runnerFile]: runnerContent }
+    ? {
+        ...files,
+        '/__tests__.ts': testFile,
+        [runnerFile]: runnerContent,
+        ...(runnerHtml ? { '/index.html': runnerHtml } : {}),
+      }
     : files
 
-  const allHiddenFiles = testFile ? [...hiddenFiles, runnerFile] : hiddenFiles
+  const allHiddenFiles = testFile
+    ? [...hiddenFiles, runnerFile, ...(runnerHtml ? ['/index.html'] : [])]
+    : hiddenFiles
   const readOnlyFiles = testFile ? ['/__tests__.ts'] : []
   const customSetup = testFile ? { entry: runnerFile } : undefined
 
