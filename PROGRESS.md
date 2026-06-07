@@ -62,13 +62,29 @@
 - Company questions preview section
 - Announcement banner, floating toast, live indicator
 
-#### Test runner (fully resolved)
-- **Hidden runner pattern:** user files never modified; `/__tests__.ts` visible read-only tab so users can see test requirements
-- `TestResultsPanel` parses ✅/❌ console logs and shows per-test-case rows
-- **Performance fix (session 3):** Runner pre-populated at lesson init; "Run Tests" calls `sandpack.runSandpack()` (~instant refresh) instead of a full re-bundle (~5–15s).
-- **Spinner fix (session 3):** `TestResultsPanel` self-manages loading state; removed external prop chain that caused permanent stuck spinner on rapid clicks.
-- **React runner fix (session 4):** `react-ts` runner now overrides `/index.tsx` (the template's actual Sandpack entry) instead of creating a second `/__test_runner__.tsx`. The template already has its own `createRoot()` in `index.tsx`; a second `createRoot()` on the same `#root` element throws in React 18/19 and kills the runner before any output is produced. DOM test code is wrapped in `setTimeout(1000ms)` to let React 19's concurrent renderer commit and paint before `document.querySelector` calls run. `customSetup.entry` removed for react-ts (no longer needed).
-- **Vanilla-ts runner fix (session 4):** Runner lives in `/index.ts` (Sandpack's natural Parcel entry — no entry overrides). User's editable code lives in `/solution.ts`. `buildVanillaTsRunner()` transforms test imports from `./index` to namespace imports from `./solution` (`import * as __m_ns from './solution'`). Namespace import never throws for missing/incomplete exports — a static named import (`import { x }`) would SyntaxError at module link time before any `console.log` runs. Root cause of all prior failures: Sandpack's `getFiles()` early-returns when `/package.json` already exists (provided by the vanilla-ts template), silently ignoring `customSetup.entry` — so any approach that depended on overriding the entry point was doomed. Using `/index.ts` directly as the runner needs zero Sandpack customization.
+#### Test runner (fully resolved — session 4)
+
+**Architecture (final):**
+
+| Template | Runner file | User's code | Trigger |
+|----------|------------|-------------|---------|
+| `react-ts` | `/index.tsx` (overrides template entry) | `/App.tsx` | `runSandpack()` |
+| `vanilla-ts` | `/index.ts` (natural Parcel entry) | `/solution.ts` | `runSandpack()` |
+
+- `/__tests__.ts` — visible, read-only tab showing test requirements
+- `buildVanillaTsRunner()` — transforms `import { x } from './index'` → namespace import from `./solution` (`import * as __m_ns from './solution'`). Namespace import never throws for missing exports (unlike static named imports which SyntaxError at link time before any `console.log` fires).
+- React runner wraps test code in `setTimeout(1000ms)` so React 19 concurrent renderer commits before DOM queries run.
+
+**Root causes fixed this session:**
+1. `customSetup.entry` silently ignored — Sandpack's `getFiles()` early-returns when `/package.json` already exists (vanilla-ts template provides it). Solution: use `/index.ts` directly (zero config).
+2. No execution iframe — `SandpackPreview` must be mounted for code to run. Vanilla-ts layout had no `PreviewPanel`; added hidden `SandpackPreview` to `PlaygroundLayout`.
+3. Auto-rerun on every keystroke — `autorun:false` blocks only the initial run; after `runSandpack()` the sandbox status becomes `"running"` and file changes trigger recompile. Solution: `recompileDelay:9_999_999` (≈167 min) when `autorun=false`. `runSandpack()` bypasses the timer entirely.
+
+**Layout redesign (GFE-style):**
+- Toolbar moved to **bottom bar**: Reset on left, Run Tests on right.
+- **JS lessons**: 2-col layout (instructions | editor) + collapsible "Run tests / Console" drawer at bottom. Run Tests click auto-opens the drawer.
+- **React lessons**: 3-col layout (instructions | editor | Browser/Console/Tests tabs). Run Tests click auto-switches to Tests tab. `PreviewPanel` stays mounted with `visibility:hidden` so the iframe is never destroyed on tab switch.
+- Tests run ONLY on explicit button click — not on code edits.
 
 #### Interview questions + Supabase
 - **Supabase project:** `ts-playground` (eu-central-1, free tier)
@@ -124,3 +140,86 @@
 - Discussion threads per lesson/question
 - Hint system (progressive hints, penalty points)
 - Mobile-responsive playground layout
+
+---
+
+## Improvement Plan (Priority Order)
+
+### P0 — Fix / Polish (must-do before launch)
+
+1. **Merge test-runner branch → main**
+   The `fix/test-runner-vanilla-ts` branch has all session 4 fixes. Open a PR and merge.
+
+2. **Verify all 10 JS lessons run correctly**
+   Each lesson's `testFile` has different imports. Spot-check: Variables, Functions, Types, Generics, Classes, Async.
+
+3. **Verify all 10 React lessons run correctly**
+   The React runner relies on `setTimeout(1000ms)` for DOM queries. Test JSX, Components, State, Effects.
+
+4. **Fix editor tab labels**
+   Currently shows `solution.ts` and `__tests__.ts`. Should show **Code** and **Test cases** (like BFE.dev).
+   - Option A: Rename the actual files (`Code.ts`, `TestCases.ts`) — may break imports inside test code.
+   - Option B: Build a custom tab bar above `SandpackCodeEditor` that maps filenames to display names. Sandpack's `SandpackFileExplorer` supports custom file labels.
+
+5. **Test results auto-persist across tab switch**
+   When user switches from Tests → Browser → Tests in React layout, `TestResultsPanel` loses state (hidden via `display:none` but state is in React). Should be fine — verify.
+
+6. **Loading state for first Run Tests click**
+   First click after page load triggers a fresh Parcel bundle (~3–8s on CodeSandbox CDN). Add a loading message: "Bundling… (first run takes a moment)".
+
+---
+
+### P1 — UX Improvements
+
+7. **Solution reveal**
+   "View solution" button that shows the `solutionFiles` code in a diff view or overlay. Currently solution code is in config but never shown.
+
+8. **Lesson completion UI**
+   When all tests pass: animate the `LessonCompletedBadge`, show a "Next lesson →" prompt inside the test panel.
+
+9. **Mark complete manually**
+   Add a "Mark complete" button in the bottom bar (like BFE.dev). Currently completion only fires when tests pass — users who skip tests can't mark progress.
+
+10. **Reset confirmation**
+    Currently "Reset" silently discards all edits. Add a confirmation or undo buffer.
+
+11. **Keyboard shortcuts visible**
+    Show `Ctrl+Enter` hint next to the Run Tests button.
+
+---
+
+### P2 — Content
+
+12. **Fix test files for multi-file JS lessons**
+    Lessons 5–10 (Arrays, Generics, etc.) may have test files that import from `'./index'`. All imports are auto-transformed to `'./solution'` by `buildVanillaTsRunner()` — verify each one.
+
+13. **Add difficulty progression within tracks**
+    Some lessons jump too fast from beginner to intermediate concepts. Add 2–3 bridging exercises per track.
+
+14. **TypeScript-specific track**
+    A dedicated TS track (types, generics, utility types, decorators) separate from the JS track.
+
+15. **Add hints to test failures**
+    Test `check()` functions already pass `hint` strings. Surface them more prominently in `TestResultsPanel` (styled differently from just `reason` text).
+
+---
+
+### P3 — Platform
+
+16. **Auth + cloud progress** (Phase 6 already planned)
+    Google + Apple OAuth via Supabase. Migrate localStorage progress to `user_progress` table.
+
+17. **Submission history**
+    Store each "Run Tests" result with timestamp. Show "Submissions" tab in lesson panel.
+
+18. **Leaderboard / streaks**
+    Daily streak tracker. Show on user profile.
+
+19. **Mobile layout**
+    Currently unusable on small screens. A stacked single-column layout for mobile (instructions collapsed by default, editor full-width).
+
+20. **Vercel deployment checklist**
+    - Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to Vercel env vars.
+    - Verify ISR revalidation works for `/questions` (1h TTL).
+    - Enable Vercel Analytics.
+    - Set up preview deployments on PRs.
