@@ -31,11 +31,20 @@ function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFil
 
   const isReact = template === 'react-ts'
   const runnerFile = isReact ? '/__test_runner__.tsx' : '/__test_runner__.ts'
-  const runnerBase = isReact ? REACT_RUNNER_BASE : `import './index'\n`
   const activeFile = isReact ? '/App.tsx' : '/index.ts'
 
+  // Pre-populate runner with full test code so no re-bundle is needed on "Run Tests".
+  // Tests run automatically on every code change (watch mode); button just forces a refresh.
+  const runnerContent = testFile
+    ? isReact
+      ? `${REACT_RUNNER_BASE}\n${testFile}`
+      : testFile
+    : isReact
+      ? REACT_RUNNER_BASE
+      : `import './index'\n`
+
   const allFiles = testFile
-    ? { ...files, '/__tests__.ts': testFile, [runnerFile]: runnerBase }
+    ? { ...files, '/__tests__.ts': testFile, [runnerFile]: runnerContent }
     : files
 
   const allHiddenFiles = testFile ? [...hiddenFiles, runnerFile] : hiddenFiles

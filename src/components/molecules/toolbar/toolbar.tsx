@@ -7,12 +7,6 @@ import { Badge } from '@/components/atoms/badge/badge'
 import { useTranslation } from '@/components/providers/locale-provider/locale-provider'
 import { useState, useEffect, useRef } from 'react'
 
-const REACT_RUNNER_BASE = `import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import App from './App'
-createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>)
-`
-
 type Props = {
   hasTestFile?: boolean
   isReact?: boolean
@@ -22,7 +16,7 @@ type Props = {
   onTestStart?: () => void
 }
 
-function Toolbar({ hasTestFile, isReact, template, showRunButton, onTestResult, onTestStart }: Props) {
+function Toolbar({ hasTestFile, showRunButton, onTestResult, onTestStart }: Props) {
   const { sandpack } = useSandpack()
   const { logs, reset: resetConsole } = useSandpackConsole({ resetOnPreviewRestart: true })
   const [testStatus, setTestStatus] = useState<'idle' | 'running' | 'pass' | 'fail'>('idle')
@@ -41,29 +35,13 @@ function Toolbar({ hasTestFile, isReact, template, showRunButton, onTestResult, 
 
   function handleRunTests() {
     if (!hasTestFile) return
-
-    const runnerFile = isReact ? '/__test_runner__.tsx' : '/__test_runner__.ts'
-    const fileData = sandpack.files['/__tests__.ts']
-    const testCode = typeof fileData === 'string' ? fileData : (fileData as any)?.code ?? ''
-
-    let runnerCode: string
-    if (isReact) {
-      const testBody = testCode
-        .split('\n')
-        .filter((l: string) => !l.trimStart().startsWith('import '))
-        .join('\n')
-        .trim()
-      runnerCode = `${REACT_RUNNER_BASE}\nsetTimeout(() => {\n${testBody}\n}, 300)`
-    } else {
-      runnerCode = testCode
-    }
-
     setTestStatus('running')
     onTestStart?.()
     resetConsole()
-    sandpack.updateFile(runnerFile, runnerCode)
+    // Runner already has the test code — just refresh the already-compiled bundle (instant).
+    sandpack.runSandpack()
 
-    // Auto-fail if no result arrives within 30 seconds
+    // Auto-fail safety net
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
     timeoutRef.current = setTimeout(() => {
       setTestStatus((prev) => (prev === 'running' ? 'fail' : prev))
