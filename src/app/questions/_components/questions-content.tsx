@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronDown, ChevronUp, Code2, BookOpen, ArrowRight, ExternalLink } from 'lucide-react'
-import { questions, COMPANY_COLORS, type Difficulty, type QuestionType } from '@/lib/questions/data'
+import { COMPANY_COLORS, type Difficulty, type QuestionType } from '@/lib/questions/data'
+import type { DbQuestion } from '@/lib/supabase/client'
 
 const LIME = '#cbf04f'
 
@@ -27,7 +28,7 @@ function CompanyBadge({ name }: { name: string }) {
 }
 
 function QuestionRow({ q, expanded, onToggle }: {
-  q: typeof questions[number]
+  q: DbQuestion
   expanded: boolean
   onToggle: () => void
 }) {
@@ -92,16 +93,16 @@ function QuestionRow({ q, expanded, onToggle }: {
                     <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed">{q.hint}</p>
                   </div>
                 )}
-                {q.starterCode && (
+                {q.starter_code && (
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400 mb-2">Starter code</p>
                     <pre className="bg-neutral-900 dark:bg-neutral-950 text-neutral-100 rounded-lg px-4 py-3 text-xs overflow-x-auto font-mono leading-relaxed">
-                      {q.starterCode}
+                      {q.starter_code}
                     </pre>
                   </div>
                 )}
                 <Link
-                  href={`/playground?code=${encodeURIComponent(q.starterCode ?? '')}`}
+                  href={`/playground?code=${encodeURIComponent(q.starter_code ?? '')}`}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-neutral-900 hover:opacity-90 transition-opacity"
                   style={{ background: LIME }}
                 >
@@ -117,10 +118,9 @@ function QuestionRow({ q, expanded, onToggle }: {
   )
 }
 
-const ALL_COMPANIES = Array.from(new Set(questions.flatMap((q) => q.companies))).sort()
-const ALL_TOPICS = Array.from(new Set(questions.map((q) => q.topic))).sort()
-
-export function QuestionsContent() {
+export function QuestionsContent({ questions }: { questions: DbQuestion[] }) {
+  const ALL_COMPANIES = Array.from(new Set(questions.flatMap((q) => q.companies))).sort()
+  const ALL_TOPICS = Array.from(new Set(questions.map((q) => q.topic).filter(Boolean) as string[])).sort()
   const [activeCompany, setActiveCompany] = useState<string>('all')
   const [activeType, setActiveType] = useState<QuestionType | 'all'>('all')
   const [activeDifficulty, setActiveDifficulty] = useState<Difficulty | 'all'>('all')
@@ -131,7 +131,7 @@ export function QuestionsContent() {
     if (activeCompany !== 'all' && !q.companies.includes(activeCompany)) return false
     if (activeType !== 'all' && q.type !== activeType) return false
     if (activeDifficulty !== 'all' && q.difficulty !== activeDifficulty) return false
-    if (activeTopic !== 'all' && q.topic !== activeTopic) return false
+    if (activeTopic !== 'all' && (q.topic ?? '') !== activeTopic) return false
     return true
   })
 
