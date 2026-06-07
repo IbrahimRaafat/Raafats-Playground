@@ -64,16 +64,6 @@ function PlaygroundLayout({ instructions, hasTestFile, isReact, template, showRu
                   <ConsolePanel />
                 )}
               </Panel>
-
-              {/* Console below test results for vanilla-ts */}
-              {!isReact && hasTestFile && (
-                <>
-                  <Separator className="h-1 bg-border hover:bg-primary/40 transition-colors cursor-row-resize" />
-                  <Panel defaultSize={35} minSize={15}>
-                    <ConsolePanel />
-                  </Panel>
-                </>
-              )}
             </Group>
           </Panel>
         </Group>
