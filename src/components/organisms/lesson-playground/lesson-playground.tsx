@@ -21,10 +21,12 @@ import App from './App'
 createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>)
 `
 
-// Rewrite vanilla-ts test code to use a namespace import so missing named exports
-// give `undefined` instead of throwing a SyntaxError that kills the runner before
-// any console.log runs.  In ESM, `import { x }` throws when `x` is not exported;
-// `import * as ns` never throws — it just gives an empty namespace object.
+// Build the vanilla-ts test runner that lives in /index.ts (Sandpack's natural
+// default entry).  User's editable code lives in /solution.ts.
+//
+// Namespace import (`import * as ns`) never throws for missing named exports —
+// it just gives an empty namespace — unlike `import { x }` which SyntaxErrors
+// during the module link phase if `x` is not exported.
 function buildVanillaTsRunner(testFile: string): string {
   const destructures: string[] = []
   let code = testFile
@@ -44,10 +46,7 @@ function buildVanillaTsRunner(testFile: string): string {
     (_, name: string) => { destructures.push(`const ${name} = (__m as any).default ?? __m`); return '' }
   )
 
-  // Namespace import: missing exports are `undefined`, not a SyntaxError.
-  // Cast to `any` so TypeScript won't reject destructuring names the student
-  // hasn't exported yet.
-  return `import * as __m_ns from './index'
+  return `import * as __m_ns from './solution'
 const __m = __m_ns as any
 ${destructures.join('\n')}
 ${code.trim()}
@@ -63,64 +62,43 @@ function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFil
   )
 
   const isReact = template === 'react-ts'
-  // For react-ts: override /index.tsx (the template's own entry) so there is only ONE
-  // createRoot() call. Creating a second root on the same #root element throws in React 18
-  // and kills the runner before any test output is produced.
-  // For vanilla-ts: use a separate /__test_runner__.ts and override index.html to load it.
-  const runnerFile = isReact ? '/index.tsx' : '/__test_runner__.ts'
-  const activeFile = isReact ? '/App.tsx' : '/index.ts'
 
-  // For react-ts: wrap DOM test code in setTimeout(1000ms) so React 19's concurrent
-  // renderer has time to commit and paint before any document.querySelector calls run.
-  // For vanilla-ts: use namespace import so missing named exports give `undefined`
-  // instead of a SyntaxError that kills the runner before any console.log runs.
+  // For react-ts: override /index.tsx (the template's own entry) — only one createRoot() call.
+  // For vanilla-ts: runner goes in /index.ts (the template's natural Parcel entry).
+  //   No entry overrides needed: Sandpack's getFiles() short-circuits when /package.json
+  //   already exists (provided by the vanilla-ts template) and ignores customSetup.entry,
+  //   so using the default /index.ts entry is the only reliable approach.
+  const runnerFile = isReact ? '/index.tsx' : '/index.ts'
+  const activeFile = isReact ? '/App.tsx' : (testFile ? '/solution.ts' : '/index.ts')
+
   const runnerContent = testFile
     ? isReact
       ? `${REACT_RUNNER_BASE}setTimeout(() => {\n${testFile}\n}, 1000)\n`
       : buildVanillaTsRunner(testFile)
-    : isReact
-      ? REACT_RUNNER_BASE
-      : `import './index'\n`
+    : REACT_RUNNER_BASE
 
-  // For vanilla-ts: we must override BOTH index.html AND package.json.
-  //
-  // Sandpack's SandpackRuntime.getFiles() short-circuits when /package.json already
-  // exists (the vanilla-ts template includes one with "main": "/index.ts") and never
-  // calls addPackageJSONIfNeeded — so customSetup.entry is silently ignored.
-  // Parcel therefore always bundles from index.ts regardless of what we pass as entry.
-  //
-  // The fix: supply our own /package.json with "main" pointing at the runner, and also
-  // override /index.html so the browser executes the correct compiled bundle.
-  const runnerHtml =
-    !isReact && testFile
-      ? `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head><body><script src="${runnerFile.slice(1)}"></script></body></html>`
-      : undefined
-
-  const runnerPackageJson =
-    !isReact && testFile
-      ? JSON.stringify({ dependencies: {}, devDependencies: { typescript: '^4.0.0' }, main: runnerFile }, null, 2)
-      : undefined
+  // For vanilla-ts with tests: user's starter code moves from index.ts → solution.ts.
+  // The runner replaces /index.ts (Sandpack executes it by default).
+  const userSolutionCode = !isReact && testFile
+    ? (files['/index.ts'] ?? files['index.ts'] ?? '')
+    : undefined
 
   const allFiles = testFile
     ? {
         ...files,
-        '/__tests__.ts': testFile,
+        // Show test file with './solution' refs so they match the actual editable file.
+        // For react-ts, refs stay as-is (react tests don't import from './index').
+        '/__tests__.ts': isReact
+          ? testFile
+          : testFile.replace(/from\s+['"]\.\/index['"]/g, "from './solution'"),
         [runnerFile]: runnerContent,
-        ...(runnerHtml ? { '/index.html': runnerHtml } : {}),
-        ...(runnerPackageJson ? { '/package.json': runnerPackageJson } : {}),
+        ...(userSolutionCode !== undefined ? { '/solution.ts': userSolutionCode } : {}),
       }
     : files
 
-  const allHiddenFiles = testFile
-    ? [
-        ...hiddenFiles,
-        runnerFile,
-        ...(runnerHtml ? ['/index.html'] : []),
-        ...(runnerPackageJson ? ['/package.json'] : []),
-      ]
-    : hiddenFiles
+  // Hide the runner file — users only see solution.ts + __tests__.ts
+  const allHiddenFiles = testFile ? [...hiddenFiles, runnerFile] : hiddenFiles
   const readOnlyFiles = testFile ? ['/__tests__.ts'] : []
-  const customSetup = !isReact && testFile ? { entry: runnerFile } : undefined
 
   return (
     <PlaygroundRoot
@@ -128,7 +106,6 @@ function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFil
       files={allFiles}
       hiddenFiles={allHiddenFiles}
       readOnlyFiles={readOnlyFiles}
-      customSetup={customSetup}
       activeFile={activeFile}
     >
       <PlaygroundLayout
