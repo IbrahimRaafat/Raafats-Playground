@@ -26,46 +26,63 @@ function isTemplateFile(filePath: string): boolean {
 
 type Props = {
   testCodeVisible?: boolean
+  actionButtons?: React.ReactNode
 }
 
-function EditorPanel({ testCodeVisible = true }: Props) {
+function EditorPanel({ testCodeVisible = true, actionButtons }: Props) {
   const { sandpack } = useSandpack()
   const { files } = sandpack
 
-  const visibleFiles = Object.keys(files).filter((f) => {
-    if (files[f].hidden) return false
-    if (isTemplateFile(f)) return false
-    if (!testCodeVisible && (f === '/__tests__.ts' || f === '/__tests__.tsx')) return false
-    return true
-  })
+  const visibleFiles = Object.keys(files).filter(
+    (f) => !files[f].hidden && !isTemplateFile(f) && (!testCodeVisible || true) &&
+      (!(!testCodeVisible) || (f !== '/__tests__.ts' && f !== '/__tests__.tsx'))
+  )
+
+  const displayFiles = testCodeVisible
+    ? visibleFiles
+    : visibleFiles.filter((f) => f !== '/__tests__.ts' && f !== '/__tests__.tsx')
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Custom tab bar */}
-      {visibleFiles.length > 1 && (
-        <div className="flex items-center border-b border-border bg-muted/20 shrink-0 overflow-x-auto">
-          {visibleFiles.map((filePath) => {
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Tab bar */}
+      <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--border)', background: 'var(--muted)', flexShrink: 0 }}>
+        {/* File tabs */}
+        <div style={{ display: 'flex', flex: 1, overflow: 'auto' }}>
+          {displayFiles.map((filePath) => {
             const label = FILE_LABELS[filePath] ?? filePath.split('/').pop() ?? filePath
             const isActive = filePath === sandpack.activeFile
             return (
               <button
                 key={filePath}
                 onClick={() => sandpack.setActiveFile(filePath)}
-                className={`px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${
-                  isActive
-                    ? 'border-foreground text-foreground'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
+                style={{
+                  padding: '0 12px',
+                  height: 36,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  borderBottom: isActive ? '2px solid var(--foreground)' : '2px solid transparent',
+                  color: isActive ? 'var(--foreground)' : 'var(--muted-foreground)',
+                  background: 'none',
+                  border: 'none',
+                  borderBottomWidth: 2,
+                  borderBottomStyle: 'solid',
+                  borderBottomColor: isActive ? 'var(--foreground)' : 'transparent',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
               >
                 {label}
               </button>
             )
           })}
         </div>
-      )}
+
+        {/* Action buttons (Reset, Solution) */}
+        {actionButtons}
+      </div>
 
       {/* Editor */}
-      <div className="flex-1 min-h-0">
+      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <SandpackCodeEditor
           showTabs={false}
           showLineNumbers

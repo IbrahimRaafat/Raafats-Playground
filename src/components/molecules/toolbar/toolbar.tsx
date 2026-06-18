@@ -132,13 +132,6 @@ function Toolbar({ hasTestFile, showRunButton, solutionFiles, onTestResult, onRu
           </Button>
         )}
 
-        {showRunButton && !hasTestFile && (
-          <Button variant="default" size="sm" onClick={handleRun} className="gap-1.5">
-            <Play className="h-3.5 w-3.5 fill-current" />
-            {t('toolbar.run')}
-          </Button>
-        )}
-
         {hasTestFile && (
           <Button
             variant="default"
@@ -154,6 +147,13 @@ function Toolbar({ hasTestFile, showRunButton, solutionFiles, onTestResult, onRu
             )}
             {t('toolbar.runTests')}
             <kbd className="hidden sm:inline text-[9px] opacity-60 font-mono ml-1">⌘↵</kbd>
+          </Button>
+        )}
+
+        {showRunButton && !hasTestFile && (
+          <Button variant="default" size="sm" onClick={handleRun} className="gap-1.5">
+            <Play className="h-3.5 w-3.5 fill-current" />
+            {t('toolbar.run')}
           </Button>
         )}
       </div>
