@@ -83,23 +83,25 @@ function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFil
   const readOnlyFiles = testFile ? ['/__tests__.ts'] : []
 
   return (
-    <PlaygroundRoot
-      template={template}
-      files={allFiles}
-      hiddenFiles={allHiddenFiles}
-      readOnlyFiles={readOnlyFiles}
-      activeFile={activeFile}
-      autorun={!testFile}
-    >
-      <PlaygroundLayout
-        instructions={instructions}
-        hasTestFile={!!testFile}
-        isReact={isReact}
+    <div className="h-full">
+      <PlaygroundRoot
         template={template}
-        solutionFiles={solutionFiles}
-        onTestResult={handleTestResult}
-      />
-    </PlaygroundRoot>
+        files={allFiles}
+        hiddenFiles={allHiddenFiles}
+        readOnlyFiles={readOnlyFiles}
+        activeFile={activeFile}
+        autorun={!testFile}
+      >
+        <PlaygroundLayout
+          instructions={instructions}
+          hasTestFile={!!testFile}
+          isReact={isReact}
+          template={template}
+          solutionFiles={solutionFiles}
+          onTestResult={handleTestResult}
+        />
+      </PlaygroundRoot>
+    </div>
   )
 }
 

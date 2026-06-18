@@ -11,9 +11,11 @@ export default function PlaygroundPage() {
       <SiteNavbar />
 
       <div className="flex-1 min-h-0">
-        <PlaygroundRoot template="vanilla-ts" autorun={false}>
-          <PlaygroundLayout showRunButton />
-        </PlaygroundRoot>
+        <div className="h-full">
+          <PlaygroundRoot template="vanilla-ts" autorun={false}>
+            <PlaygroundLayout showRunButton />
+          </PlaygroundRoot>
+        </div>
       </div>
 
       <SiteFooter />
