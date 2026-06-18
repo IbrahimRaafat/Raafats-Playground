@@ -11,30 +11,33 @@ const FILE_LABELS: Record<string, string> = {
   '/__tests__.tsx': 'Test cases',
 }
 
-// Files from Sandpack templates that users don't need to see as tabs
 const TEMPLATE_FILES = new Set([
   '/styles.css',
   '/index.html',
   '/package.json',
   '/tsconfig.json',
-  '/public',
 ])
 
 function isTemplateFile(filePath: string): boolean {
-  // Exact match
   if (TEMPLATE_FILES.has(filePath)) return true
-  // Files inside public/
   if (filePath.startsWith('/public/')) return true
   return false
 }
 
-function EditorPanel() {
+type Props = {
+  testCodeVisible?: boolean
+}
+
+function EditorPanel({ testCodeVisible = true }: Props) {
   const { sandpack } = useSandpack()
   const { files } = sandpack
 
-  const visibleFiles = Object.keys(files).filter(
-    (f) => !files[f].hidden && !isTemplateFile(f)
-  )
+  const visibleFiles = Object.keys(files).filter((f) => {
+    if (files[f].hidden) return false
+    if (isTemplateFile(f)) return false
+    if (!testCodeVisible && (f === '/__tests__.ts' || f === '/__tests__.tsx')) return false
+    return true
+  })
 
   return (
     <div className="flex flex-col h-full">

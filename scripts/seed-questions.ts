@@ -4,6 +4,7 @@
  */
 import { createClient } from '@supabase/supabase-js'
 import { questions } from '../src/lib/questions/data'
+import type { PlaygroundConfig } from '../src/lib/content/types'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://vwfxobbxbgbozaouzzkj.supabase.co'
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
@@ -14,6 +15,25 @@ if (!SUPABASE_ANON_KEY) {
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+function buildPlaygroundConfig(q: typeof questions[0]): PlaygroundConfig | null {
+  if (q.type === 'theory') return null
+
+  const starterFiles: Record<string, string> = {}
+  if (q.starterCode) {
+    starterFiles['/index.ts'] = q.starterCode
+  }
+
+  return {
+    showPreview: false,
+    showConsole: true,
+    showTests: false,
+    testCodeVisible: false,
+    autorun: false,
+    starterFiles,
+    solutionFiles: {},
+  }
+}
 
 const rows = questions.map((q) => ({
   source: 'manual',
@@ -29,6 +49,7 @@ const rows = questions.map((q) => ({
   hint: q.hint ?? null,
   starter_code: q.starterCode ?? null,
   is_premium: false,
+  playground_config: buildPlaygroundConfig(q),
 }))
 
 async function main() {

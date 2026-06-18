@@ -34,11 +34,43 @@ Stores all interview questions — manually curated, scraped from LeetCode, BFE.
 | `hint` | text | coding questions: key insight |
 | `starter_code` | text | coding questions: starter template |
 | `is_premium` | boolean | default false; premium questions hidden from anonymous users |
+| `playground_config` | jsonb | playground UI configuration (see below) |
 | `created_at` | timestamptz | |
 | `updated_at` | timestamptz | auto-updated by trigger |
 | `search_vec` | tsvector | full-text search vector, auto-updated by trigger |
 
 **Unique constraint:** `(source, source_id)` — prevents duplicate questions from the same source.
+
+### `playground_config` JSONB schema
+
+```json
+{
+  "showPreview": false,
+  "showConsole": true,
+  "showTests": true,
+  "testCodeVisible": true,
+  "autorun": false,
+  "starterFiles": { "/index.ts": "export function debounce..." },
+  "solutionFiles": { "/index.ts": "export function debounce(func, wait)..." },
+  "testFile": "import { debounce } from './index'...",
+  "files": {
+    "/index.ts": { "label": "Code", "editable": true },
+    "/styles.css": { "visible": false, "editable": false }
+  }
+}
+```
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `showPreview` | boolean | false | Show preview panel (for React) |
+| `showConsole` | boolean | true | Show console tab |
+| `showTests` | boolean | true | Show tests tab |
+| `testCodeVisible` | boolean | true | Show test code in editor tabs |
+| `autorun` | boolean | false | Auto-run on code edits |
+| `starterFiles` | object | - | Starter code files |
+| `solutionFiles` | object | - | Solution code files |
+| `testFile` | string | - | Test code to run |
+| `files` | object | - | Per-file config (labels, editability, visibility) |
 
 ---
 
@@ -84,23 +116,24 @@ Migrations are applied via the Supabase MCP or CLI. They are not stored as files
 
 ```sql
 create table if not exists questions (
-  id           uuid primary key default gen_random_uuid(),
-  source       text not null default 'manual',
-  source_id    text,
-  title        text not null,
-  description  text not null,
-  type         text not null check (type in ('coding', 'theory')),
-  difficulty   text not null check (difficulty in ('easy', 'medium', 'hard')),
-  topic        text,
-  companies    text[] default '{}',
-  tags         text[] default '{}',
-  answer       text,
-  hint         text,
-  starter_code text,
-  is_premium   boolean default false,
-  created_at   timestamptz default now(),
-  updated_at   timestamptz default now(),
-  search_vec   tsvector
+  id                uuid primary key default gen_random_uuid(),
+  source            text not null default 'manual',
+  source_id         text,
+  title             text not null,
+  description       text not null,
+  type              text not null check (type in ('coding', 'theory')),
+  difficulty        text not null check (difficulty in ('easy', 'medium', 'hard')),
+  topic             text,
+  companies         text[] default '{}',
+  tags              text[] default '{}',
+  answer            text,
+  hint              text,
+  starter_code      text,
+  is_premium        boolean default false,
+  playground_config jsonb,
+  created_at        timestamptz default now(),
+  updated_at        timestamptz default now(),
+  search_vec        tsvector
 );
 
 create unique index if not exists questions_source_source_id_key

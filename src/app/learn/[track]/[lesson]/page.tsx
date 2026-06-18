@@ -57,6 +57,7 @@ export default async function LessonPage({ params }: Props) {
           files={config.starterFiles}
           testFile={config.testFile}
           solutionFiles={config.solutionFiles}
+          playgroundConfig={config.playground}
           instructions={instructions}
         />
       </div>

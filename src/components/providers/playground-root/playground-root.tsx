@@ -4,17 +4,38 @@ import { SandpackProvider } from '@codesandbox/sandpack-react'
 import type { SandpackProviderProps } from '@codesandbox/sandpack-react'
 import { useTheme } from '@/components/providers/theme-provider/theme-provider'
 import { sandpackThemes } from '@/lib/sandpack/themes'
-import type { SandpackTemplate } from '@/lib/content/types'
+import type { SandpackTemplate, PlaygroundConfig, PlaygroundFileConfig } from '@/lib/content/types'
 
 type Props = {
   template?: SandpackTemplate
   files?: Record<string, string>
   hiddenFiles?: string[]
   readOnlyFiles?: string[]
+  playgroundConfig?: PlaygroundConfig
   customSetup?: SandpackProviderProps['customSetup']
   activeFile?: string
   autorun?: boolean
   children: React.ReactNode
+}
+
+function applyFileConfig(
+  files: Record<string, { code: string; hidden: boolean; readOnly: boolean }>,
+  fileConfig?: Record<string, PlaygroundFileConfig>
+): Record<string, { code: string; hidden: boolean; readOnly: boolean }> {
+  if (!fileConfig) return files
+
+  const result: Record<string, { code: string; hidden: boolean; readOnly: boolean }> = {}
+
+  for (const [path, file] of Object.entries(files)) {
+    const config = fileConfig[path]
+    result[path] = {
+      code: file.code,
+      hidden: config?.visible === false ? true : file.hidden,
+      readOnly: config?.editable === false ? true : file.readOnly,
+    }
+  }
+
+  return result
 }
 
 function PlaygroundRoot({
@@ -22,6 +43,7 @@ function PlaygroundRoot({
   files,
   hiddenFiles = [],
   readOnlyFiles = [],
+  playgroundConfig,
   customSetup,
   activeFile,
   autorun = true,
@@ -29,7 +51,9 @@ function PlaygroundRoot({
 }: Props) {
   const { theme } = useTheme()
 
-  const sandpackFiles = files
+  const effectiveAutorun = playgroundConfig?.autorun ?? autorun
+
+  let sandpackFiles = files
     ? Object.fromEntries(
         Object.entries(files).map(([name, code]) => {
           const path = name.startsWith('/') ? name : `/${name}`
@@ -45,6 +69,10 @@ function PlaygroundRoot({
       )
     : undefined
 
+  if (sandpackFiles && playgroundConfig?.files) {
+    sandpackFiles = applyFileConfig(sandpackFiles, playgroundConfig.files)
+  }
+
   return (
     <SandpackProvider
       template={template}
@@ -53,8 +81,8 @@ function PlaygroundRoot({
       theme={sandpackThemes[theme]}
       options={{
         recompileMode: 'delayed',
-        recompileDelay: autorun ? 500 : 9_999_999,
-        autorun,
+        recompileDelay: effectiveAutorun ? 500 : 9_999_999,
+        autorun: effectiveAutorun,
         ...(activeFile ? { activeFile } : {}),
       }}
     >

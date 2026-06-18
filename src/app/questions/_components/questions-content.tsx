@@ -85,7 +85,25 @@ function QuestionRow({ q, expanded, onToggle }: {
                 </p>
               </div>
             )}
-            {q.type === 'coding' && (
+                {q.type === 'coding' && q.playground_config && (
+                  <div className="space-y-4">
+                    {q.hint && (
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400 mb-2">Hint</p>
+                        <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed">{q.hint}</p>
+                      </div>
+                    )}
+                    <Link
+                      href={`/problems/${q.id}`}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-neutral-900 hover:opacity-90 transition-opacity"
+                      style={{ background: LIME }}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Open in Playground
+                    </Link>
+                  </div>
+                )}
+                {q.type === 'coding' && !q.playground_config && (
               <div className="space-y-4">
                 {q.hint && (
                   <div>

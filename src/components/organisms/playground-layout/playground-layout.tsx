@@ -9,6 +9,7 @@ import { ConsolePanel } from '@/components/atoms/console-panel/console-panel'
 import { TestResultsPanel } from '@/components/organisms/test-results-panel/test-results-panel'
 import { Toolbar } from '@/components/molecules/toolbar/toolbar'
 import { SolutionDrawer } from '@/components/molecules/solution-drawer/solution-drawer'
+import type { PlaygroundConfig } from '@/lib/content/types'
 
 type BottomTab = 'console' | 'tests'
 
@@ -19,6 +20,7 @@ type Props = {
   template?: string
   showRunButton?: boolean
   solutionFiles?: Record<string, string>
+  playgroundConfig?: PlaygroundConfig
   onTestResult?: (passed: boolean) => void
 }
 
@@ -29,9 +31,15 @@ function PlaygroundLayout({
   template,
   showRunButton,
   solutionFiles,
+  playgroundConfig,
   onTestResult,
 }: Props) {
-  const [bottomTab, setBottomTab] = useState<BottomTab>(hasTestFile ? 'tests' : 'console')
+  const showPreview = playgroundConfig?.showPreview ?? isReact
+  const showConsole = playgroundConfig?.showConsole ?? true
+  const showTests = playgroundConfig?.showTests ?? hasTestFile
+  const testCodeVisible = playgroundConfig?.testCodeVisible ?? true
+
+  const [bottomTab, setBottomTab] = useState<BottomTab>(showTests ? 'tests' : 'console')
   const [bottomPanelOpen, setBottomPanelOpen] = useState(true)
   const [solutionOpen, setSolutionOpen] = useState(false)
 
@@ -45,8 +53,7 @@ function PlaygroundLayout({
     setBottomPanelOpen(true)
   }, [])
 
-  const showPreview = isReact
-  const showBottomTabs = hasTestFile || true // always show console
+  const showBottomTabs = showConsole || showTests
 
   return (
     <div className="flex flex-col h-full relative">
@@ -77,7 +84,7 @@ function PlaygroundLayout({
             defaultSize={showPreview ? (instructions ? 38 : 55) : (instructions ? 72 : 100)}
             minSize={20}
           >
-            <EditorPanel />
+            <EditorPanel testCodeVisible={testCodeVisible} />
           </Panel>
 
           {/* Preview panel (React only) */}
@@ -92,22 +99,24 @@ function PlaygroundLayout({
         </Group>
       </div>
 
-      {/* Bottom panel — Console / Tests tabs (like GFE) */}
+      {/* Bottom panel — Console / Tests tabs */}
       {showBottomTabs && (
         <div className="border-t border-border shrink-0" style={{ height: bottomPanelOpen ? 200 : 36 }}>
           {/* Tab strip */}
           <div className="flex items-center h-9 border-b border-border bg-muted/20 shrink-0">
-            <button
-              onClick={() => { setBottomTab('console'); setBottomPanelOpen(true) }}
-              className={`px-4 h-full text-xs font-medium border-b-2 -mb-px transition-colors ${
-                bottomTab === 'console' && bottomPanelOpen
-                  ? 'border-foreground text-foreground'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Console
-            </button>
-            {hasTestFile && (
+            {showConsole && (
+              <button
+                onClick={() => { setBottomTab('console'); setBottomPanelOpen(true) }}
+                className={`px-4 h-full text-xs font-medium border-b-2 -mb-px transition-colors ${
+                  bottomTab === 'console' && bottomPanelOpen
+                    ? 'border-foreground text-foreground'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Console
+              </button>
+            )}
+            {showTests && (
               <button
                 onClick={() => { setBottomTab('tests'); setBottomPanelOpen(true) }}
                 className={`px-4 h-full text-xs font-medium border-b-2 -mb-px transition-colors ${
@@ -133,10 +142,12 @@ function PlaygroundLayout({
           {/* Tab content */}
           {bottomPanelOpen && (
             <div className="h-[calc(100%-36px)] overflow-hidden">
-              <div className={`h-full ${bottomTab !== 'console' ? 'hidden' : ''}`}>
-                <ConsolePanel />
-              </div>
-              {hasTestFile && (
+              {showConsole && (
+                <div className={`h-full ${bottomTab !== 'console' ? 'hidden' : ''}`}>
+                  <ConsolePanel />
+                </div>
+              )}
+              {showTests && (
                 <div className={`h-full ${bottomTab !== 'tests' ? 'hidden' : ''}`}>
                   <TestResultsPanel />
                 </div>
@@ -148,14 +159,14 @@ function PlaygroundLayout({
 
       {/* Bottom toolbar */}
       <Toolbar
-        hasTestFile={hasTestFile}
+        hasTestFile={showTests}
         isReact={isReact}
         template={template}
         showRunButton={showRunButton}
         solutionFiles={solutionFiles}
         onTestResult={onTestResult}
         onRunTests={handleRunTests}
-        onConsole={handleConsoleClick}
+        onConsole={showConsole ? handleConsoleClick : undefined}
         onSolution={() => setSolutionOpen(true)}
       />
 

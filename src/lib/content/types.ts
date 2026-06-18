@@ -2,6 +2,24 @@ export type Difficulty = 'beginner' | 'intermediate' | 'advanced'
 
 export type SandpackTemplate = 'vanilla-ts' | 'react-ts'
 
+export type PlaygroundFileConfig = {
+  label?: string
+  editable?: boolean
+  visible?: boolean
+}
+
+export type PlaygroundConfig = {
+  showPreview?: boolean
+  showConsole?: boolean
+  showTests?: boolean
+  testCodeVisible?: boolean
+  autorun?: boolean
+  starterFiles?: Record<string, string>
+  solutionFiles?: Record<string, string>
+  testFile?: string
+  files?: Record<string, PlaygroundFileConfig>
+}
+
 export type LessonConfig = {
   id: string
   title: string
@@ -10,6 +28,7 @@ export type LessonConfig = {
   starterFiles: Record<string, string>
   solutionFiles: Record<string, string>
   testFile: string
+  playground?: PlaygroundConfig
 }
 
 export type LessonMeta = {

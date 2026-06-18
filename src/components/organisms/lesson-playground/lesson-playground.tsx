@@ -4,7 +4,7 @@ import { useCallback } from 'react'
 import { markComplete } from '@/lib/progress/store'
 import { PlaygroundRoot } from '@/components/providers/playground-root/playground-root'
 import { PlaygroundLayout } from '@/components/organisms/playground-layout/playground-layout'
-import type { SandpackTemplate } from '@/lib/content/types'
+import type { SandpackTemplate, PlaygroundConfig } from '@/lib/content/types'
 
 type Props = {
   lessonId: string
@@ -13,6 +13,7 @@ type Props = {
   hiddenFiles?: string[]
   testFile?: string
   solutionFiles?: Record<string, string>
+  playgroundConfig?: PlaygroundConfig
   instructions?: React.ReactNode
 }
 
@@ -45,7 +46,16 @@ ${code.trim()}
 `
 }
 
-function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFile, solutionFiles, instructions }: Props) {
+function LessonPlayground({
+  lessonId,
+  template,
+  files,
+  hiddenFiles = [],
+  testFile,
+  solutionFiles,
+  playgroundConfig,
+  instructions,
+}: Props) {
   const handleTestResult = useCallback(
     (passed: boolean) => {
       if (passed) markComplete(lessonId)
@@ -89,6 +99,7 @@ function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFil
         files={allFiles}
         hiddenFiles={allHiddenFiles}
         readOnlyFiles={readOnlyFiles}
+        playgroundConfig={playgroundConfig}
         activeFile={activeFile}
         autorun={!testFile}
       >
@@ -98,6 +109,7 @@ function LessonPlayground({ lessonId, template, files, hiddenFiles = [], testFil
           isReact={isReact}
           template={template}
           solutionFiles={solutionFiles}
+          playgroundConfig={playgroundConfig}
           onTestResult={handleTestResult}
         />
       </PlaygroundRoot>
