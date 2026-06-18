@@ -7,14 +7,20 @@ import { questions } from '../src/lib/questions/data'
 import type { PlaygroundConfig } from '../src/lib/content/types'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://vwfxobbxbgbozaouzzkj.supabase.co'
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
-if (!SUPABASE_ANON_KEY) {
-  console.error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY — set it in .env.local')
+const key = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY
+if (!key) {
+  console.error('Missing SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY — set in .env.local')
   process.exit(1)
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+if (!SUPABASE_SERVICE_ROLE_KEY) {
+  console.warn('⚠️  Using anon key — RLS may block inserts. Set SUPABASE_SERVICE_ROLE_KEY for full access.')
+}
+
+const supabase = createClient(SUPABASE_URL, key)
 
 function buildPlaygroundConfig(q: typeof questions[0]): PlaygroundConfig | null {
   if (q.type === 'theory') return null
