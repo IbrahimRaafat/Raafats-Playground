@@ -41,3 +41,29 @@ In v4, the exported names changed:
 - `direction` prop → `orientation` prop
 
 Our `playground-layout.tsx` already uses the correct v4 API.
+
+---
+
+## 4. `react-resizable-panels` vertical Group doesn't render
+
+**Symptom**: Using `Group orientation="vertical"` from `react-resizable-panels` causes the entire layout to collapse — no editor, no instructions, no bottom panel.
+
+**Root cause**: The vertical `Group` component fails to render when nested inside a flex container with `h-full`. The horizontal `Group` works fine.
+
+**Workaround**: The bottom panel (test results) uses CSS `flex` instead of `react-resizable-panels`. The horizontal `Group` for instructions/editor/preview still works. Vertical resizing is done with custom mousedown/mousemove handlers.
+
+---
+
+## 5. Sandpack's built-in Run button is redundant
+
+**Symptom**: When `autorun` is false, Sandpack shows its own "Run" button in the preview area. Our toolbar also has a "Run" / "Run Tests" button.
+
+**Current state**: We kept Sandpack's built-in Run button and removed our toolbar. Reset + Solution buttons are in the editor tab bar.
+
+---
+
+## 6. `react-resizable-panels` needs inline styles for layout
+
+**Symptom**: Using Tailwind classes like `flex-1 min-h-0` on containers holding `Group` components sometimes causes layout collapse.
+
+**Workaround**: The `PlaygroundLayout` uses inline styles (`display: flex`, `flex: 1`, `minHeight: 0`) for all flex containers. This is more reliable across browsers and avoids Tailwind compilation edge cases.
