@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getTrack, getLessonMdx, getLessonConfig } from '@/lib/content/loader'
+import { getTrackAsync, getLessonMdx, getLessonConfig } from '@/lib/content/loader'
 import { LessonPlayground } from '@/components/organisms/lesson-playground/lesson-playground'
 import { LessonInstructions } from '@/components/organisms/lesson-instructions/lesson-instructions'
 import { LessonNav } from '@/components/molecules/lesson-nav/lesson-nav'
@@ -12,7 +12,7 @@ type Props = { params: Promise<{ track: string; lesson: string }> }
 
 export async function generateMetadata({ params }: Props) {
   const { track: trackSlug, lesson: lessonSlug } = await params
-  const track = getTrack(trackSlug)
+  const track = await getTrackAsync(trackSlug)
   const meta = track?.lessons.find((l) => l.slug === lessonSlug)
   return { title: meta ? `${meta.title} — TS Playground` : 'Not found' }
 }
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props) {
 export default async function LessonPage({ params }: Props) {
   const { track: trackSlug, lesson: lessonSlug } = await params
 
-  const track = getTrack(trackSlug)
+  const track = await getTrackAsync(trackSlug)
   if (!track) notFound()
 
   const lessonIndex = track.lessons.findIndex((l) => l.slug === lessonSlug)

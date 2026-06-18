@@ -1,7 +1,8 @@
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
-import type { Track, LessonMeta, LessonConfig } from './types'
+import { supabase } from '@/lib/supabase/client'
+import type { Track, LessonMeta, LessonConfig, PlaygroundConfig } from './types'
 
 const CONTENT_DIR = path.join(process.cwd(), 'src', 'content', 'lessons')
 
@@ -18,27 +19,52 @@ const TRACK_META: Record<string, { title: string; description: string; icon: str
   },
 }
 
-export function getAllTracks(): Track[] {
-  const trackDirs = fs.readdirSync(CONTENT_DIR).filter((d) => {
-    return fs.statSync(path.join(CONTENT_DIR, d)).isDirectory()
-  })
-
-  return trackDirs
-    .filter((slug) => TRACK_META[slug])
-    .map((slug) => {
-      const meta = TRACK_META[slug]
-      const lessons = getLessonsForTrack(slug)
-      return { slug, ...meta, lessons }
-    })
+type DbLesson = {
+  track_slug: string
+  slug: string
+  title: string
+  description: string
+  difficulty: string
+  sort_order: number
+  mdx_content: string
+  sandpack_template: string
+  starter_files: Record<string, string>
+  solution_files: Record<string, string>
+  test_file: string
+  playground_config: PlaygroundConfig | null
 }
 
-export function getTrack(trackSlug: string): Track | null {
-  if (!TRACK_META[trackSlug]) return null
-  const lessons = getLessonsForTrack(trackSlug)
-  return { slug: trackSlug, ...TRACK_META[trackSlug], lessons }
+// ─── Supabase fetchers ───────────────────────────────────────────────
+
+async function fetchLessonsFromDb(): Promise<DbLesson[]> {
+  const { data, error } = await supabase
+    .from('lessons')
+    .select('*')
+    .order('sort_order', { ascending: true })
+
+  if (error) {
+    console.error('[loader] Failed to fetch lessons from Supabase:', error.message)
+    return []
+  }
+
+  return (data as DbLesson[]) ?? []
 }
 
-function getLessonsForTrack(trackSlug: string): LessonMeta[] {
+async function fetchLessonFromDb(trackSlug: string, slug: string): Promise<DbLesson | null> {
+  const { data, error } = await supabase
+    .from('lessons')
+    .select('*')
+    .eq('track_slug', trackSlug)
+    .eq('slug', slug)
+    .single()
+
+  if (error || !data) return null
+  return data as DbLesson
+}
+
+// ─── Disk fallback helpers ────────────────────────────────────────────
+
+function getLessonsFromDisk(trackSlug: string): LessonMeta[] {
   const trackDir = path.join(CONTENT_DIR, trackSlug)
   if (!fs.existsSync(trackDir)) return []
 
@@ -64,23 +90,128 @@ function getLessonsForTrack(trackSlug: string): LessonMeta[] {
     .sort((a, b) => a!.order - b!.order) as LessonMeta[]
 }
 
-export function getLessonMdx(trackSlug: string, lessonSlug: string): string | null {
+function getMdxFromDisk(trackSlug: string, lessonSlug: string): string | null {
   const mdxPath = path.join(CONTENT_DIR, trackSlug, lessonSlug, 'lesson.mdx')
   if (!fs.existsSync(mdxPath)) return null
-  const raw = fs.readFileSync(mdxPath, 'utf8')
-  return matter(raw).content
+  return matter(fs.readFileSync(mdxPath, 'utf8')).content
+}
+
+async function getConfigFromDisk(trackSlug: string, lessonSlug: string): Promise<LessonConfig | null> {
+  try {
+    const mod = await import(`@/content/lessons/${trackSlug}/${lessonSlug}/config`)
+    return mod.config as LessonConfig
+  } catch {
+    return null
+  }
+}
+
+// ─── Public API (Supabase-first, disk fallback) ───────────────────────
+
+export function getAllTracks(): Track[] {
+  // Track metadata is still hardcoded — only lesson content moves to DB
+  return Object.entries(TRACK_META).map(([slug, meta]) => ({
+    slug,
+    ...meta,
+    lessons: [], // populated async below
+  }))
+}
+
+export async function getAllTracksAsync(): Promise<Track[]> {
+  const lessons = await fetchLessonsFromDb()
+  const byTrack = new Map<string, DbLesson[]>()
+
+  for (const l of lessons) {
+    if (!TRACK_META[l.track_slug]) continue
+    if (!byTrack.has(l.track_slug)) byTrack.set(l.track_slug, [])
+    byTrack.get(l.track_slug)!.push(l)
+  }
+
+  // Fall back to disk if DB is empty
+  if (lessons.length === 0) {
+    return Object.entries(TRACK_META).map(([slug, meta]) => ({
+      slug,
+      ...meta,
+      lessons: getLessonsFromDisk(slug),
+    }))
+  }
+
+  return Object.entries(TRACK_META).map(([slug, meta]) => ({
+    slug,
+    ...meta,
+    lessons: byTrack.get(slug)?.map((l) => ({
+      slug: l.slug,
+      trackSlug: l.track_slug,
+      title: l.title,
+      description: l.description,
+      difficulty: l.difficulty as LessonMeta['difficulty'],
+      order: l.sort_order,
+    })) ?? [],
+  }))
+}
+
+export async function getTrackAsync(trackSlug: string): Promise<Track | null> {
+  if (!TRACK_META[trackSlug]) return null
+
+  const dbLessons = await fetchLessonsFromDb()
+  const trackLessons = dbLessons.filter((l) => l.track_slug === trackSlug)
+
+  if (trackLessons.length > 0) {
+    return {
+      slug: trackSlug,
+      ...TRACK_META[trackSlug],
+      lessons: trackLessons.map((l) => ({
+        slug: l.slug,
+        trackSlug: l.track_slug,
+        title: l.title,
+        description: l.description,
+        difficulty: l.difficulty as LessonMeta['difficulty'],
+        order: l.sort_order,
+      })),
+    }
+  }
+
+  // Fallback to disk
+  return {
+    slug: trackSlug,
+    ...TRACK_META[trackSlug],
+    lessons: getLessonsFromDisk(trackSlug),
+  }
+}
+
+// Sync versions kept for generateMetadata (must be sync)
+export function getTrack(trackSlug: string): Track | null {
+  if (!TRACK_META[trackSlug]) return null
+  return {
+    slug: trackSlug,
+    ...TRACK_META[trackSlug],
+    lessons: getLessonsFromDisk(trackSlug),
+  }
+}
+
+export async function getLessonMdx(trackSlug: string, lessonSlug: string): Promise<string | null> {
+  const db = await fetchLessonFromDb(trackSlug, lessonSlug)
+  if (db?.mdx_content) return db.mdx_content
+  return getMdxFromDisk(trackSlug, lessonSlug)
 }
 
 export async function getLessonConfig(
   trackSlug: string,
   lessonSlug: string
 ): Promise<LessonConfig | null> {
-  try {
-    const mod = await import(
-      `@/content/lessons/${trackSlug}/${lessonSlug}/config`
-    )
-    return mod.config as LessonConfig
-  } catch {
-    return null
+  const db = await fetchLessonFromDb(trackSlug, lessonSlug)
+
+  if (db) {
+    return {
+      id: `${trackSlug}-${lessonSlug}`,
+      title: db.title,
+      difficulty: db.difficulty as LessonConfig['difficulty'],
+      sandpackTemplate: db.sandpack_template as LessonConfig['sandpackTemplate'],
+      starterFiles: db.starter_files,
+      solutionFiles: db.solution_files,
+      testFile: db.test_file,
+      playground: db.playground_config ?? undefined,
+    }
   }
+
+  return getConfigFromDisk(trackSlug, lessonSlug)
 }

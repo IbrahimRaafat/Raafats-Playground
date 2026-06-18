@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getAllTracks } from '@/lib/content/loader'
+import { getAllTracksAsync } from '@/lib/content/loader'
 
 export type SearchLesson = {
   title: string
@@ -11,8 +11,8 @@ export type SearchLesson = {
   order: number
 }
 
-export function GET() {
-  const tracks = getAllTracks()
+export async function GET() {
+  const tracks = await getAllTracksAsync()
   const lessons: SearchLesson[] = tracks.flatMap((track) =>
     track.lessons.map((lesson) => ({
       title: lesson.title,
