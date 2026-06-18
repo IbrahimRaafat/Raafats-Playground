@@ -1,7 +1,7 @@
 'use client'
 
 import { useSandpackConsole } from '@codesandbox/sandpack-react'
-import { CheckCircle2, XCircle, Clock } from 'lucide-react'
+import { CheckCircle2, XCircle, Clock, Trophy } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 
 type TestCase = {
@@ -40,54 +40,80 @@ function TestResultsPanel() {
   const cases = parseTestCases(logs)
   const passCount = cases.filter((c) => c.status === 'pass').length
   const failCount = cases.filter((c) => c.status === 'fail').length
+  const allPassed = cases.length > 0 && failCount === 0
 
-  // Track running state locally — don't rely on sandpack.status which can stay 'running'
-  // permanently while the hosted bundler is connecting on initial load.
   const [isRunning, setIsRunning] = useState(false)
+  const [isBundling, setIsBundling] = useState(false)
   const prevLogsLenRef = useRef(0)
   const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const prevLen = prevLogsLenRef.current
     prevLogsLenRef.current = logs.length
 
     if (logs.length === 0 && prevLen > 0) {
-      // Logs cleared — Run Tests was clicked, new run starting
       setIsRunning(true)
+      setIsBundling(true)
       if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current)
-      safetyTimerRef.current = setTimeout(() => setIsRunning(false), 15_000)
+      safetyTimerRef.current = setTimeout(() => {
+        setIsRunning(false)
+        setIsBundling(false)
+      }, 15_000)
     } else if (logs.length > 0) {
-      // Results arrived — stop spinner
       setIsRunning(false)
+      setIsBundling(false)
       if (safetyTimerRef.current) { clearTimeout(safetyTimerRef.current); safetyTimerRef.current = null }
     }
   }, [logs.length])
 
+  // Auto-scroll to bottom when new results arrive
+  useEffect(() => {
+    if (listRef.current && cases.length > 0) {
+      listRef.current.scrollTop = listRef.current.scrollHeight
+    }
+  }, [cases.length])
 
-  if (cases.length === 0 && isRunning) {
+  // Empty state — no tests run yet
+  if (cases.length === 0 && !isRunning) {
     return (
-      <div className="h-full flex flex-col items-center justify-center gap-2 text-muted-foreground text-xs p-4">
-        <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
-        <span>Running tests…</span>
+      <div className="h-full flex flex-col items-center justify-center gap-3 text-muted-foreground text-xs p-4">
+        <Clock className="h-6 w-6 opacity-30" />
+        <div className="text-center">
+          <p className="font-medium">No test results yet</p>
+          <p className="opacity-70 mt-1">Click <strong>Run Tests</strong> or press <kbd className="px-1.5 py-0.5 rounded border border-border bg-muted text-[10px] font-mono">Ctrl+Enter</kbd></p>
+        </div>
       </div>
     )
   }
 
-  if (cases.length === 0) {
+  // Running state
+  if (isRunning) {
     return (
-      <div className="h-full flex flex-col items-center justify-center gap-2 text-muted-foreground text-xs p-4">
-        <Clock className="h-5 w-5 opacity-40" />
-        <span>Click <strong>Run Tests</strong> to see results</span>
+      <div className="h-full flex flex-col items-center justify-center gap-3 text-muted-foreground text-xs p-4">
+        <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <div className="text-center">
+          <p className="font-medium text-foreground">
+            {isBundling ? 'Bundling...' : 'Running tests...'}
+          </p>
+          <p className="opacity-70 mt-1">
+            {isBundling ? 'First run may take a moment' : 'Evaluating your code'}
+          </p>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Header */}
+      {/* Summary header */}
       <div className="flex items-center gap-3 px-3 py-2 border-b border-border bg-muted/30 text-xs font-medium shrink-0">
-        <span className="text-muted-foreground">Test Results</span>
-        {cases.length > 0 && (
+        {allPassed ? (
+          <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+            <Trophy className="h-3.5 w-3.5" />
+            <span>All {passCount} tests passed</span>
+          </div>
+        ) : (
           <>
             <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
               <CheckCircle2 className="h-3 w-3" />
@@ -101,15 +127,14 @@ function TestResultsPanel() {
             )}
           </>
         )}
-        {isRunning && <div className="ms-auto h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin text-muted-foreground" />}
       </div>
 
-      {/* Test case list */}
-      <div className="flex-1 overflow-auto">
+      {/* Test case list — auto-scrollable */}
+      <div ref={listRef} className="flex-1 overflow-auto">
         {cases.map((c, i) => (
           <div
             key={i}
-            className={`flex items-start gap-2.5 px-3 py-2.5 border-b border-border/50 text-xs ${
+            className={`flex items-start gap-2.5 px-3 py-2.5 border-b border-border/50 text-xs transition-colors ${
               c.status === 'pass'
                 ? 'bg-green-50/40 dark:bg-green-950/20'
                 : 'bg-red-50/40 dark:bg-red-950/20'
@@ -131,7 +156,7 @@ function TestResultsPanel() {
                 {c.name}
               </span>
               {c.reason && (
-                <span className="text-muted-foreground truncate">{c.reason}</span>
+                <span className="text-muted-foreground text-[11px] leading-relaxed">{c.reason}</span>
               )}
             </div>
           </div>

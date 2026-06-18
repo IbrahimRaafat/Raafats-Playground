@@ -56,6 +56,7 @@ export default async function LessonPage({ params }: Props) {
           template={config.sandpackTemplate}
           files={config.starterFiles}
           testFile={config.testFile}
+          solutionFiles={config.solutionFiles}
           instructions={instructions}
         />
       </div>
