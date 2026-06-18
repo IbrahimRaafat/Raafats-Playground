@@ -15,11 +15,10 @@ type Props = {
   solutionFiles?: Record<string, string>
   onTestResult?: (passed: boolean) => void
   onRunTests?: () => void
-  onConsole?: () => void
   onSolution?: () => void
 }
 
-function Toolbar({ hasTestFile, showRunButton, solutionFiles, onTestResult, onRunTests, onConsole, onSolution }: Props) {
+function Toolbar({ hasTestFile, showRunButton, solutionFiles, onTestResult, onRunTests, onSolution }: Props) {
   const { sandpack } = useSandpack()
   const { logs, reset: resetConsole } = useSandpackConsole({ resetOnPreviewRestart: true })
   const [testStatus, setTestStatus] = useState<'idle' | 'running' | 'pass' | 'fail'>('idle')
@@ -100,18 +99,12 @@ function Toolbar({ hasTestFile, showRunButton, solutionFiles, onTestResult, onRu
 
   return (
     <div className="flex items-center justify-between px-3 py-2 border-t border-border bg-muted/20 shrink-0 gap-2">
-      {/* Left: Reset + Console */}
+      {/* Left: Reset */}
       <div className="flex items-center gap-1.5">
         <Button variant="ghost" size="sm" onClick={handleReset} className="gap-1.5">
           <RotateCcw className="h-3.5 w-3.5" />
           {t('toolbar.reset')}
         </Button>
-        {onConsole && (
-          <Button variant="ghost" size="sm" onClick={onConsole} className="gap-1.5">
-            <span className="text-[10px]">{'>'}_</span>
-            Console
-          </Button>
-        )}
       </div>
 
       {/* Center: Test status badge */}
