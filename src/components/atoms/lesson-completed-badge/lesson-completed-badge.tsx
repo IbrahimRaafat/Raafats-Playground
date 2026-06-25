@@ -8,8 +8,7 @@ function LessonCompletedBadge({ lessonId }: { lessonId: string }) {
   const [completed, setCompleted] = useState(false)
 
   useEffect(() => {
-    const progress = getAllProgress()
-    setCompleted(progress[lessonId] === 'completed')
+    getAllProgress().then(progress => setCompleted(progress[lessonId] === 'completed'))
   }, [lessonId])
 
   if (!completed) return null

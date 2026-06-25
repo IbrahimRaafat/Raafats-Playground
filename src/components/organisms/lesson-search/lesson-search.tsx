@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { Search, X, BookOpen } from 'lucide-react'
 import { Button } from '@/components/atoms/button/button'
@@ -10,6 +11,7 @@ import type { SearchLesson } from '@/app/api/lessons/route'
 
 function LessonSearch() {
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [query, setQuery] = useState('')
   const [lessons, setLessons] = useState<SearchLesson[]>([])
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -17,6 +19,8 @@ function LessonSearch() {
   const listRef = useRef<HTMLUListElement>(null)
   const router = useRouter()
   const { t } = useTranslation()
+
+  useEffect(() => { setMounted(true) }, [])
 
   // Fetch once on first open
   useEffect(() => {
@@ -114,10 +118,10 @@ function LessonSearch() {
         <kbd className="hidden sm:inline text-[10px] font-mono border border-border rounded px-1 py-0.5 leading-none opacity-60">⌘K</kbd>
       </Button>
 
-      {/* Modal */}
-      {open && (
+      {/* Modal — portalled to body to escape navbar stacking context */}
+      {mounted && open && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4"
+          className="fixed inset-0 z-[200] flex items-start justify-center pt-[15vh] px-4"
           onClick={() => setOpen(false)}
         >
           {/* Backdrop */}
@@ -207,7 +211,8 @@ function LessonSearch() {
               <span><kbd className="font-mono">ESC</kbd> {t('search.close')}</span>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )

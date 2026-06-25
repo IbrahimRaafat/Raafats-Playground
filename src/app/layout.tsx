@@ -3,6 +3,7 @@ import { Inter, Cairo } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/providers/theme-provider/theme-provider'
 import { LocaleProvider } from '@/components/providers/locale-provider/locale-provider'
+import { AuthProvider } from '@/components/providers/auth-provider/auth-provider'
 
 const inter = Inter({ variable: '--font-sans', subsets: ['latin'] })
 const cairo = Cairo({ variable: '--font-arabic', subsets: ['arabic', 'latin'], weight: ['400', '500', '600', '700'] })
@@ -18,7 +19,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="h-full bg-background text-foreground antialiased">
         <ThemeProvider>
           <LocaleProvider>
-            {children}
+            <AuthProvider>
+              {children}
+            </AuthProvider>
           </LocaleProvider>
         </ThemeProvider>
       </body>

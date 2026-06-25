@@ -7,6 +7,7 @@ function PreviewPanel() {
     <SandpackPreview
       showNavigator={false}
       showOpenInCodeSandbox={false}
+      showRefreshButton={false}
       style={{ height: '100%', minHeight: 0 }}
     />
   )

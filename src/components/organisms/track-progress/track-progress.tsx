@@ -17,7 +17,7 @@ function TrackProgress({ trackSlug, lessons }: Props) {
   const { t } = useTranslation()
 
   useEffect(() => {
-    setProgress(getAllProgress())
+    getAllProgress().then(setProgress)
   }, [])
 
   const completedCount = lessons.filter((l) => progress[`${trackSlug}/${l.slug}`] === 'completed').length

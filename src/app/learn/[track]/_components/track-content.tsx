@@ -15,7 +15,7 @@ export function TrackContent({ track }: { track: Track }) {
   const [progress, setProgress] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    setProgress(getAllProgress())
+    getAllProgress().then(setProgress)
   }, [])
 
   return (

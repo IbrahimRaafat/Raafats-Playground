@@ -11,6 +11,7 @@ import { ThemeToggle } from '@/components/atoms/theme-toggle/theme-toggle'
 import { LanguageToggle } from '@/components/atoms/language-toggle/language-toggle'
 import { LessonSearch } from '@/components/organisms/lesson-search/lesson-search'
 import { TrackCard } from '@/components/molecules/track-card/track-card'
+import { NavAuth } from '@/components/organisms/nav-auth/nav-auth'
 import type { Track, LessonMeta } from '@/lib/content/types'
 
 const LIME = '#cbf04f'
@@ -235,14 +236,10 @@ export function HomeContent({ tracks }: { tracks: Track[] }) {
         </nav>
         <div className="flex-1" />
         <div className="flex items-center gap-1">
-          <button className="hidden md:block text-sm px-3 py-1.5 rounded-md font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">Pricing</button>
-          <button className="hidden md:block text-sm px-3 py-1.5 rounded-md font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">Sign in / up</button>
           <LessonSearch />
           <ThemeToggle />
           <LanguageToggle />
-          <Link href="/learn" className="ms-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-neutral-900 hover:opacity-90 transition-opacity" style={{ background: LIME }}>
-            Get full access
-          </Link>
+          <NavAuth />
         </div>
       </header>
 

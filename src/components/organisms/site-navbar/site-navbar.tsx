@@ -5,6 +5,7 @@ import { ChevronDown } from 'lucide-react'
 import { ThemeToggle } from '@/components/atoms/theme-toggle/theme-toggle'
 import { LanguageToggle } from '@/components/atoms/language-toggle/language-toggle'
 import { LessonSearch } from '@/components/organisms/lesson-search/lesson-search'
+import { NavAuth } from '@/components/organisms/nav-auth/nav-auth'
 
 const LIME = '#cbf04f'
 
@@ -56,13 +57,7 @@ function SiteNavbar({ actions }: Props) {
         <ThemeToggle />
         <LanguageToggle />
         {actions}
-        <Link
-          href="/learn"
-          className="ms-2 hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-neutral-900 hover:opacity-90 transition-opacity"
-          style={{ background: LIME }}
-        >
-          Get started
-        </Link>
+        <NavAuth />
       </div>
     </header>
   )
